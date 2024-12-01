@@ -90,7 +90,7 @@ const cookieJar = new CookieJar([{
 const fetch = wrapFetch({ cookieJar });
 
 if (args.new) {
-  args.input = true;
+  args.inputs = true;
   if (template.length === 0) {
     await last();
   } else {
@@ -102,7 +102,6 @@ if (args.new) {
       Date.UTC(YEAR, 11, parseInt(args.day, 10), 5, 0, 0, 300),
     );
     const ms = d.getTime() - Date.now();
-    console.log(`Waiting until ${d.toISOString()} (${ms}ms)`);
     await wait(ms);
   }
 
@@ -130,7 +129,6 @@ if (args.inputs) {
   const input = await res.text();
   const inputFile = adjacentFile(args, 'txt', 'inputs');
   await Deno.writeTextFile(inputFile, input);
-
   if (args.new) {
     await $`code ${inputFile}`;
     Deno.exit(0);
