@@ -1,5 +1,6 @@
 import { dirname, fromFileUrl, join } from '$std/path/mod.ts';
 import { TextLineStream } from '$std/streams/mod.ts';
+import { assert } from '$std/assert/mod.ts';
 import peggy from 'peggy';
 
 export interface MainArgs {
@@ -207,12 +208,8 @@ export function divmod<T extends number | bigint>(x: T, y: T): [T, T] {
     }
     return [q, r];
   }
-  if (typeof q === 'number') {
-    return [Math.floor(q) as T, r];
-  }
-
-  /* c8 ignore next */
-  throw new Error('Unreachable');
+  assert(typeof q === 'number');
+  return [Math.floor(q) as T, r];
 }
 
 export function gcd<T extends number | bigint>(...n: T[]): T {

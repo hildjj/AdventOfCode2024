@@ -1,4 +1,4 @@
-import { Point, Rect } from '../rect.ts';
+import { Dir, InfiniteRect, Point, Rect } from '../rect.ts';
 
 import {
   assert,
@@ -17,6 +17,10 @@ Deno.test('Point', async (t) => {
     assert(p2.equals({ x: 3, y: -1 }));
     const p3 = p.stretch(2);
     assertEquals(p3, new Point(6, 8));
+    assertEquals(p.inDir(Dir.E), new Point(4, 4));
+    assertEquals(p.inDir(Dir.W), new Point(2, 4));
+    assertEquals(p.inDir(Dir.N), new Point(3, 3));
+    assertEquals(p.inDir(Dir.S), new Point(3, 5));
   });
 
   await t.step('distances', () => {
@@ -30,6 +34,29 @@ Deno.test('Point', async (t) => {
     const p = new Point(9, 8);
     assertEquals(p.toString(), '9,8');
     assertEquals(Deno.inspect(p), '9,8');
+  });
+
+  await t.step('neighbors', () => {
+    const p = new Point(6, 8);
+    assertEquals(p.cardinal(), [
+      new Point(7, 8),
+      new Point(6, 9),
+      new Point(5, 8),
+      new Point(6, 7),
+    ]);
+    assertEquals(p.cardinal(Rect.ofSize(8, 8, '')), [
+      new Point(6, 7),
+    ]);
+  });
+
+  await t.step('sort', () => {
+    const points = [new Point(2, 3), new Point(2, 1), new Point(1, 2)];
+    points.sort(Point.sort);
+    assertEquals(points, [
+      new Point(1, 2),
+      new Point(2, 1),
+      new Point(2, 3),
+    ]);
   });
 });
 
@@ -95,6 +122,8 @@ Deno.test('Rect', async (t) => {
     assertEquals(s.get(p), 'p');
     s.set({ x: 0, y: 0 }, 'q');
     assertEquals(s.get({ x: 0, y: 0 }), 'q');
+    const t = r.with(new Point(0, 0), 't');
+    assertEquals(Deno.inspect(t), 'tbc\ndef');
   });
 
   await t.step('toString', () => {
@@ -138,5 +167,40 @@ XabcX
 XdefX
 XXXXX`,
     );
+  });
+
+  await t.step('map', () => {
+    const s = r.map(() => 'z');
+    assertEquals(Deno.inspect(s), 'zzz\nzzz');
+  });
+
+  await t.step('indexOf', () => {
+    const p = r.indexOf('e');
+    assertEquals(p, new Point(1, 1));
+    assertEquals(r.indexOf('z'), undefined);
+  });
+});
+
+Deno.test('InfinitRect', async (t) => {
+  await t.step('create', () => {
+    const ir = new InfiniteRect([[1, 2], [3, 4]]);
+    assertEquals(ir.min, new Point(0, 0));
+    assertEquals(ir.max, new Point(2, 2));
+    assert(ir.check(new Point(100, 1000)));
+    assertEquals(ir.get(new Point(3, 3)), 4);
+    ir.set(4, 4, 9);
+    assertEquals(ir.max.x, 4);
+    assertEquals(ir.max.y, 4);
+    ir.set(new Point(-1, 0), 8);
+    assertEquals(ir.min.x, -1);
+  });
+
+  await t.step('slice', () => {
+    const ir = new InfiniteRect([
+      'abc'.split(''),
+      'def'.split(''),
+    ]);
+    const s = ir.slice(new Point(0, 0), new Point(1, 1));
+    assertEquals(Deno.inspect(s), 'ab\nde');
   });
 });
