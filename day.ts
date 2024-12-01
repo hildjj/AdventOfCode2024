@@ -7,7 +7,7 @@ import { parseArgs } from '$std/cli/parse_args.ts';
 import { adjacentFile, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
 
-const YEAR = 2023;
+const YEAR = 2024;
 
 const args = parseArgs(Deno.args, {
   boolean: ['benchmark', 'help', 'new', 'record', 'test', 'trace', 'nowait', 'inputs'],
@@ -170,7 +170,7 @@ try {
   }
 
   console.log(Deno.inspect(results, {
-    colors: Deno.isatty(Deno.stdout.rid),
+    colors: Deno.stdout.isTerminal(),
     depth: Infinity,
     iterableLimit: Infinity,
     strAbbreviateSize: Infinity,
