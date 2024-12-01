@@ -4,13 +4,22 @@ import $ from '$dax';
 import { assertEquals } from '$std/assert/mod.ts';
 import { fromFileUrl, parse as pathParse } from '$std/path/mod.ts';
 import { parseArgs } from '$std/cli/parse_args.ts';
-import { adjacentFile, type MainEntry } from './lib/utils.ts';
+import { adjacentFile, type MainArgs, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
 
 const YEAR = 2024;
 
 const args = parseArgs(Deno.args, {
-  boolean: ['benchmark', 'help', 'new', 'record', 'test', 'trace', 'nowait', 'inputs'],
+  boolean: [
+    'benchmark',
+    'help',
+    'new',
+    'record',
+    'test',
+    'trace',
+    'nowait',
+    'inputs',
+  ],
   string: ['day'],
   alias: {
     b: 'benchmark',
@@ -79,39 +88,29 @@ if (!args.day) {
   args.day = await last();
 }
 
-const cookieJar = new CookieJar([{
-  name: 'session',
-  value: Deno.env.get('AOC_COOKIE'),
-  domain: 'adventofcode.com',
-  path: '/',
-  secure: true,
-  httpOnly: false,
-}]);
-const fetch = wrapFetch({ cookieJar });
-
-if (args.new) {
-  args.inputs = true;
+export async function newDay(a: MainArgs): Promise<void> {
+  a.inputs = true;
   if (template.length === 0) {
     await last();
   } else {
-    args.day = String(parseInt(args.day, 10) + 1);
+    a.day = String(parseInt(a.day, 10) + 1);
   }
 
-  if (!args.nowait) {
+  if (!a.nowait) {
     const d = new Date(
-      Date.UTC(YEAR, 11, parseInt(args.day, 10), 5, 0, 0, 300),
+      Date.UTC(YEAR, 11, parseInt(a.day, 10), 5, 0, 0, 300),
     );
     const ms = d.getTime() - Date.now();
     await wait(ms);
   }
 
-  await $`open https://adventofcode.com/${YEAR}/day/${args.day}`;
+  await $`open https://adventofcode.com/${YEAR}/day/${a.day}`;
 
-  await $`git co -b day${args.day}`;
+  await $`git co -b day${a.day}`;
 
   const copies = template.map((f) => [
     new URL(f, import.meta.url),
-    new URL(f.replace('0', args.day), import.meta.url),
+    new URL(f.replace('0', a.day), import.meta.url),
   ]);
 
   // Copy to new day
@@ -122,64 +121,110 @@ if (args.new) {
   }
 }
 
-if (args.inputs) {
-  const res = await fetch(
-    `https://adventofcode.com/${YEAR}/day/${args.day}/input`,
-  );
-  const input = await res.text();
-  const inputFile = adjacentFile(args, 'txt', 'inputs');
-  await Deno.writeTextFile(inputFile, input);
-  if (args.new) {
-    await $`code ${inputFile}`;
-    Deno.exit(0);
+export async function inputs(a: MainArgs): Promise<string> {
+  const inputFile = adjacentFile(a, 'txt', 'inputs');
+  try {
+    await Deno.stat(inputFile);
+  } catch (_ignored) {
+    const aoc = Deno.env.get('AOC_COOKIE');
+    if (!aoc) {
+      console.error('No AOC_COOKIE environment variable');
+      Deno.exit(1);
+    }
+    const cookieJar = new CookieJar([{
+      name: 'session',
+      value: aoc,
+      domain: 'adventofcode.com',
+      path: '/',
+      secure: true,
+      httpOnly: false,
+    }]);
+    const fetch = wrapFetch({ cookieJar });
+    const inputSrc = `https://adventofcode.com/${YEAR}/day/${a.day}/input`;
+    console.log(`Fetching ${inputSrc}`);
+    const headers = new Headers({
+      'user-agent':
+        `github.com/hildjj/AdventOfCode${YEAR} by joe-github@cursive.net`,
+    });
+    const res = await fetch(inputSrc, { headers });
+    const input = await res.text();
+    if (!res.ok) {
+      console.error(res.status, res.statusText);
+      console.error(input);
+      Deno.exit(1);
+    }
+    await Deno.writeTextFile(inputFile, input);
   }
+  return inputFile;
 }
 
-const mod = (await import(
-  new URL(`day${args.day}.ts`, import.meta.url).toString()
-)).default as MainEntry<unknown>;
+export async function test(args: MainArgs): Promise<void> {
+  const mod = (await import(
+    new URL(`day${args.day}.ts`, import.meta.url).toString()
+  )).default as MainEntry<unknown>;
 
-try {
-  if (args.benchmark) {
-    Deno.bench(`Day ${args.day}`, { permissions: { read: true } }, async () => {
-      await mod(args);
-    });
-  }
-  const results = await mod(args);
-  const {duration} = performance.measure(`run_${args.day}`, args.day);
+  try {
+    if (args.benchmark) {
+      Deno.bench(
+        `Day ${args.day}`,
+        { permissions: { read: true } },
+        async () => {
+          await mod(args);
+        },
+      );
+    }
+    const results = await mod(args);
+    const { duration } = performance.measure(`run_${args.day}`, args.day);
 
-  if (args.record) {
-    const str = Deno.inspect(results, {
-      colors: false,
-      compact: true,
+    if (args.record) {
+      const str = Deno.inspect(results, {
+        colors: false,
+        compact: true,
+        depth: Infinity,
+        iterableLimit: Infinity,
+        strAbbreviateSize: Infinity,
+        trailingComma: true,
+      }).replaceAll('[ ', '[').replaceAll(' ]', ']');
+
+      await Deno.writeTextFile(
+        adjacentFile(args, 'js', 'test'),
+        `export default ${str};\n`,
+      );
+    }
+
+    if (args.test) {
+      const expected = await import(adjacentFile(args, 'js', 'test'));
+      assertEquals(results, expected.default);
+    }
+
+    console.log(Deno.inspect(results, {
+      colors: Deno.stdout.isTerminal(),
       depth: Infinity,
       iterableLimit: Infinity,
       strAbbreviateSize: Infinity,
       trailingComma: true,
-    }).replaceAll('[ ', '[').replaceAll(' ]', ']');
+    }));
 
-    await Deno.writeTextFile(
-      adjacentFile(args, 'js', 'test'),
-      `export default ${str};\n`,
-    );
+    // Does not include parser generation or parse time, which are roughly
+    // a constant 8ms on my box.
+    console.log(`${duration.toFixed(4)} ms`);
+  } catch (er) {
+    console.error(er);
+  }
+}
+
+if (import.meta.main) {
+  if (args.new) {
+    await newDay(args);
   }
 
-  if (args.test) {
-    const expected = await import(adjacentFile(args, 'js', 'test'));
-    assertEquals(results, expected.default);
+  if (args.inputs) {
+    const inputFile = await inputs(args);
+    if (args.new) {
+      await $`code ${inputFile}`;
+      Deno.exit(0);
+    }
   }
 
-  console.log(Deno.inspect(results, {
-    colors: Deno.stdout.isTerminal(),
-    depth: Infinity,
-    iterableLimit: Infinity,
-    strAbbreviateSize: Infinity,
-    trailingComma: true,
-  }));
-
-  // Does not include parser generation or parse time, which are roughly
-  // a constant 8ms on my box.
-  console.log(`${duration.toFixed(4)} ms`);
-} catch (er) {
-  console.error(er);
+  await test(args);
 }

@@ -2,6 +2,19 @@
 
 My solutions to [AdventOfCode 2024](https://adventofcode.com/2024)
 
+## Automation
+
+This script/repo/tool does follow the automation guidelines on the
+/r/adventofcode [community wiki](https://www.reddit.com/r/adventofcode/wiki/faqs/automation). Specifically:
+
+- Outbound calls are made once from the developer's machine to retrieve the
+  day's inputs, then those inputs are stored into a private repo that
+  Github Actions has access to in order to perform CI.
+- If you suspect your input is corrupted, you can manually request a fresh
+  copy by deleting the cached version in the inputs/ directory.
+- The User-Agent header in userAgentHeaderFunction() is set to me since I
+  maintain this tool.
+
 ## Pre-requisites
 
 - [Deno](https://deno.com/) 2.1.2
