@@ -466,10 +466,10 @@ export class Sequence<T> {
    * @param seqs - The sequences to zip together
    * @returns [s[0][0], s[1][0]], [s[0][1], s[1][1]], ...
    */
-  static zip<T>(...seqs: Sequence<T>[]): Sequence<T[]> {
+  static zip<T>(...seqs: (Sequence<T> | Iterable<T>)[]): Sequence<T[]> {
     return new Sequence({
       *[Symbol.iterator](): Generator<T[], void, undefined> {
-        const its = seqs.map((s) => s.it[Symbol.iterator]());
+        const its = seqs.map((s) => s[Symbol.iterator] ());
         while (true) {
           const nexts = its.map((i) => i.next());
           if (nexts.some((n) => n.done)) {

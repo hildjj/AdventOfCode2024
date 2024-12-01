@@ -1,10 +1,13 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
 import { Counter } from './lib/counter.ts';
+import { Sequence } from './lib/sequence.ts';
 
 function part1(left: number[], right: number[]): number {
   left.sort();
   right.sort();
-  return left.reduce((t, v, i) => t + Math.abs(v - right[i]), 0);
+  return Sequence
+    .zip(left, right)
+    .reduce((t, [l, r]): number => t + Math.abs(l - r), 0);
 }
 
 function part2(left: number[], right: number[]): number {
