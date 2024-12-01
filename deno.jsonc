@@ -1,0 +1,52 @@
+{
+  "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts **/*.js",
+    "test": "rm -rf coverage && deno test -A --coverage --parallel --shuffle && deno coverage coverage --html && deno coverage coverage --lcov --output=coverage/lcov.info --exclude='test/**/*'",
+    "ci": "deno test -A --coverage && deno coverage coverage --lcov --output=coverage/lcov.info",
+    "update": "deno run -A jsr:@molt/cli --dry-run",
+    "docs": "deno doc --html --name=AdventOfCode2023 counter.ts ocr.ts  sequence.ts  utils.ts",
+    "bench": "deno bench -A day.ts -- -b"
+  },
+  "imports": {
+    "$dax": "https://deno.land/x/dax@0.39.2/mod.ts",
+    "$event": "https://deno.land/x/event@2.0.1/mod.ts",
+    "$jar": "https://deno.land/x/another_cookiejar@v5.0.7/mod.ts",
+    "$std/": "https://deno.land/std@0.224.0/",
+    "peggy": "npm:peggy@^4.2.0"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": true,
+    "proseWrap": "preserve",
+    "exclude": ["docs"]
+  },
+  "lint": {
+    "exclude": ["woords/phdef.js", "graph/dot.js", "docs"],
+    "rules": {
+      "tags": ["fresh", "recommended"],
+      "exclude": ["no-await-in-loop"],
+      "include": [
+        "ban-untagged-todo",
+        "camelcase",
+        "default-param-last",
+        "eqeqeq",
+        "explicit-function-return-type",
+        "explicit-module-boundary-types",
+        "guard-for-in",
+        "no-const-assign",
+        "no-eval",
+        "no-external-import",
+        "no-implicit-declare-namespace-export",
+        "no-non-null-asserted-optional-chain",
+        "no-sparse-arrays",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal"
+      ]
+    }
+  },
+  "lock": false,
+}
