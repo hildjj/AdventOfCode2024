@@ -10,12 +10,13 @@ import { CookieJar, wrapFetch } from '$jar';
 const YEAR = 2023;
 
 const args = parseArgs(Deno.args, {
-  boolean: ['benchmark', 'help', 'new', 'record', 'test', 'trace', 'nowait'],
+  boolean: ['benchmark', 'help', 'new', 'record', 'test', 'trace', 'nowait', 'inputs'],
   string: ['day'],
   alias: {
     b: 'benchmark',
     d: 'day',
     h: 'help',
+    i: 'inputs',
     n: 'new',
     r: 'record',
     t: 'test',
@@ -37,6 +38,7 @@ Options:
   -b,--benchmark    Run benchmarks
   -d,--day <number> Day (default: latest day unless --new)
   -h,--help         Print help text and exit
+  -i,--inputs       Get inputs for the target day.  Implied by --new.
   -n,--new          Wait until drop time, then scaffold today's solution
   -r,--record       Record results as test data
   -t,--test         Check test results
@@ -77,22 +79,23 @@ if (!args.day) {
   args.day = await last();
 }
 
+const cookieJar = new CookieJar([{
+  name: 'session',
+  value: Deno.env.get('AOC_COOKIE'),
+  domain: 'adventofcode.com',
+  path: '/',
+  secure: true,
+  httpOnly: false,
+}]);
+const fetch = wrapFetch({ cookieJar });
+
 if (args.new) {
+  args.input = true;
   if (template.length === 0) {
     await last();
   } else {
     args.day = String(parseInt(args.day, 10) + 1);
   }
-
-  const cookieJar = new CookieJar([{
-    name: 'session',
-    value: Deno.env.get('AOC_COOKIE'),
-    domain: 'adventofcode.com',
-    path: '/',
-    secure: true,
-    httpOnly: false,
-  }]);
-  const fetch = wrapFetch({ cookieJar });
 
   if (!args.nowait) {
     const d = new Date(
@@ -104,15 +107,8 @@ if (args.new) {
   }
 
   await $`open https://adventofcode.com/${YEAR}/day/${args.day}`;
-  const res = await fetch(
-    `https://adventofcode.com/${YEAR}/day/${args.day}/input`,
-  );
-  const input = await res.text();
 
   await $`git co -b day${args.day}`;
-  const inputFile = adjacentFile(args, 'txt', 'inputs');
-  await Deno.writeTextFile(inputFile, input);
-  await $`code ${inputFile}`;
 
   const copies = template.map((f) => [
     new URL(f, import.meta.url),
@@ -125,7 +121,20 @@ if (args.new) {
   for (const [_from, to] of copies) {
     await $`code ${fromFileUrl(to)}`;
   }
-  Deno.exit(0);
+}
+
+if (args.inputs) {
+  const res = await fetch(
+    `https://adventofcode.com/${YEAR}/day/${args.day}/input`,
+  );
+  const input = await res.text();
+  const inputFile = adjacentFile(args, 'txt', 'inputs');
+  await Deno.writeTextFile(inputFile, input);
+
+  if (args.new) {
+    await $`code ${inputFile}`;
+    Deno.exit(0);
+  }
 }
 
 const mod = (await import(
