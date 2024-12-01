@@ -3,9 +3,11 @@ const totalCount: countFilter = (n: number): number => n;
 
 /**
  * Count all the things!
+ * If the things have multiple parts, those parts will be stringified and
+ * joined by commas.
  */
 export class Counter<T = string> {
-  points: { [id: string]: number } = {};
+  points: { [id: string]: number } = Object.create(null);
 
   /**
    * Iterate over the entries in points.
