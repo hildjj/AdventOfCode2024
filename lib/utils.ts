@@ -3,9 +3,9 @@ import { TextLineStream } from '$std/streams/mod.ts';
 import peggy from 'peggy';
 
 export interface MainArgs {
-  trace: boolean;
   day: string;
-  _: (string | number)[];
+  trace?: boolean;
+  _?: (string | number)[];
   [x: string]: unknown;
 }
 
@@ -34,7 +34,7 @@ export async function* readLines(
   filename?: string,
 ): AsyncGenerator<string, undefined, undefined> {
   if (!filename) {
-    if (args._.length > 0) {
+    if (args._?.length) {
       filename = String(args._[0]);
     } else {
       filename = adjacentFile(args, 'txt', 'inputs');
@@ -123,7 +123,7 @@ export async function parseFile<T>(
     }
     source = input;
     if (!source) {
-      if (args._.length > 0) {
+      if (args._?.length) {
         source = String(args._[0]);
       } else {
         source = adjacentFile(args, 'txt', 'inputs');

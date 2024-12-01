@@ -1,5 +1,5 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
-import {Counter} from './lib/counter.ts';
+import { Counter } from './lib/counter.ts';
 
 function part1(left: number[], right: number[]): number {
   left.sort();
@@ -16,7 +16,7 @@ function part2(left: number[], right: number[]): number {
 export default async function main(args: MainArgs): Promise<[number, number]> {
   const inp = await parseFile<[number, number][]>(args);
   const left: number[] = [];
-  const right: number[] = []
+  const right: number[] = [];
   for (const [l, r] of inp) {
     left.push(l);
     right.push(r);

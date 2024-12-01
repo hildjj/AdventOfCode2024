@@ -1,0 +1,54 @@
+name: Test Deno Module
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+    secrets:
+      AOC_COOKIE:
+        required: true
+      CODECOV_TOKEN:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        deno-version: [~2.1.2]
+
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        env:
+          DENO_DIR: ${{ runner.temp }}/deno_modules
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: ${{ hashFiles('deno.jsonc') }}
+      - uses: actions/cache@v4
+        with:
+          path: inputs
+          key: inputs
+      - name: Use Deno Version ${{ matrix.deno-version }}
+        uses: denoland/setup-deno@v1
+        env:
+          DENO_DIR: ${{ runner.temp }}/deno_modules
+        with:
+          deno-version: ${{ matrix.deno-version }}
+      - name: Lint
+        env:
+          DENO_DIR: ${{ runner.temp }}/deno_modules
+        run: deno task check
+      - name: Test
+        env:
+          DENO_DIR: ${{ runner.temp }}/deno_modules
+          AOC_COOKIE: ${{ secrets.AOC_COOKIE }}
+        run: deno task ci
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

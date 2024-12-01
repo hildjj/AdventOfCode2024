@@ -11,7 +11,7 @@ import {
 } from '../utils.ts';
 import { assertEquals, assertRejects, assertThrows } from '$std/assert/mod.ts';
 import { fromFileUrl } from '$std/path/from_file_url.ts';
-import peggy, { LibraryResults } from 'peggy';
+import peggy from 'peggy';
 
 const INVALID_FILE = `_____DOES___NOT___EXIST:${Deno.pid}`;
 
