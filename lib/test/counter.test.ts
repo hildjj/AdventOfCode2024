@@ -9,6 +9,7 @@ Deno.test('Counter', () => {
   c.add(1, 2); // 1
   assertEquals(c.get(1, 2), 1);
   assertEquals(c.get(33), 0);
+  assertEquals(c.values(), [1]);
   c.add(1, 2); // 2
   c.add(3, 4); // 1
   assertEquals(c.keys(), ['1,2', '3,4']);

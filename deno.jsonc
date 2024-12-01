@@ -2,8 +2,8 @@
   "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
   "tasks": {
     "check": "deno fmt --check && deno lint && deno check **/*.ts **/*.js",
-    "test": "rm -rf coverage && deno test -A --coverage --parallel --shuffle && deno coverage coverage --html && deno coverage coverage --lcov --output=coverage/lcov.info --exclude='test/**/*'",
-    "ci": "deno test -A --coverage && deno coverage coverage --lcov --output=coverage/lcov.info",
+    "test": "rm -rf coverage && deno test -A --coverage --parallel --shuffle && deno coverage coverage --html --exclude='test/**/*' --exclude=day.ts  && deno coverage coverage --lcov --output=coverage/lcov.info",
+    "ci": "deno test -A --coverage && deno coverage coverage --lcov --output=coverage/lcov.info --exclude='test/**/*' --exclude=day.ts",
     "update": "deno run -A jsr:@molt/cli --dry-run",
     "docs": "deno doc --html --name=AdventOfCode2024 lib/*.ts",
     "bench": "deno bench -A day.ts -- -b"

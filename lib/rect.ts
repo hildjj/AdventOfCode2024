@@ -358,7 +358,7 @@ export class Rect<T = string> {
   with(xp: PointLike | number, yp: number | T, val?: T): Rect<T> {
     const [x, y, v] = (typeof xp === 'number')
       ? [xp, yp as number, val as T]
-      : [xp.x, xp.y, val!];
+      : [xp.x, xp.y, yp as T];
     const r = this.copy();
     r.set(x, y, v);
     return r;
@@ -443,6 +443,10 @@ export class Rect<T = string> {
   }
 }
 
+/**
+ * Rectangle that wraps around so that the top is below the bottom and right
+ * column is left of 0.
+ */
 export class InfiniteRect<T> extends Rect<T> {
   max: Point;
   min: Point;
@@ -471,10 +475,10 @@ export class InfiniteRect<T> extends Rect<T> {
     const col = mod(x, this.width);
     const line = mod(y, this.height);
 
-    this.min.x = Math.min(this.min.x, col);
-    this.min.y = Math.min(this.min.y, line);
-    this.max.x = Math.max(this.max.x, col);
-    this.max.y = Math.max(this.max.y, line);
+    this.min.x = Math.min(this.min.x, x);
+    this.min.y = Math.min(this.min.y, y);
+    this.max.x = Math.max(this.max.x, x);
+    this.max.y = Math.max(this.max.y, y);
 
     super.set(col, line, val!);
   }
