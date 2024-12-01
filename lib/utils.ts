@@ -135,11 +135,13 @@ export async function parseFile<T>(
       inputCache[source] = text;
     }
 
-    return compiled.parse(text, {
+    const res = compiled.parse(text, {
       grammarSource: source,
       sourceMap: 'inline',
       format: 'es',
     }) as T;
+    performance.mark(args.day);
+    return res;
   } catch (e) {
     const er = e as peggy.GrammarError;
     if (typeof er.format === 'function') {
