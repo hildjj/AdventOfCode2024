@@ -469,7 +469,7 @@ export class Sequence<T> {
   static zip<T>(...seqs: (Sequence<T> | Iterable<T>)[]): Sequence<T[]> {
     return new Sequence({
       *[Symbol.iterator](): Generator<T[], void, undefined> {
-        const its = seqs.map((s) => s[Symbol.iterator] ());
+        const its = seqs.map((s) => s[Symbol.iterator]());
         while (true) {
           const nexts = its.map((i) => i.next());
           if (nexts.some((n) => n.done)) {
