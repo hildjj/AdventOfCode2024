@@ -1,6 +1,6 @@
-# Advent of Code 2023
+# Advent of Code 2024
 
-My solutions to [AdventOfCode 2023](https://adventofcode.com/2023)
+My solutions to [AdventOfCode 2024](https://adventofcode.com/2024)
 
 ## Pre-requisites
 
@@ -20,7 +20,7 @@ solution.
 
 ```sh
 $ ./day.ts -n
-Waiting until 2023-12-01T05:00:00.300Z
+Waiting until 2024-12-01T05:00:00.300Z
 ```
 
 ## Writing your solution
