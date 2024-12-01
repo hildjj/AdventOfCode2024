@@ -453,18 +453,18 @@ export class InfiniteRect<T> extends Rect<T> {
     this.max = new Point(this.width, this.height);
   }
 
-  check(_xp: PointLike | number, _yp?: number): boolean {
+  override check(_xp: PointLike | number, _yp?: number): boolean {
     return true;
   }
 
-  get(xp: PointLike | number, yp?: number, dx = 0, dy = 0): T {
+  override get(xp: PointLike | number, yp?: number, dx = 0, dy = 0): T {
     const [x, y] = (typeof xp === 'number') ? [xp, yp!] : [xp.x, xp.y];
     const col = mod(x + dx, this.width);
     const line = mod(y + dy, this.height);
     return super.get(col, line);
   }
 
-  set(xp: PointLike | number, yv: number | T, val?: T): void {
+  override set(xp: PointLike | number, yv: number | T, val?: T): void {
     const [x, y] = ((typeof xp === 'number') && (typeof yv === 'number'))
       ? [xp, yv]
       : [(xp as PointLike).x, (xp as PointLike).y];

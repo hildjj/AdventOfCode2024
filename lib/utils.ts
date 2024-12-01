@@ -140,8 +140,9 @@ export async function parseFile<T>(
       sourceMap: 'inline',
       format: 'es',
     }) as T;
-  } catch (er) {
-    if (typeof (er as peggy.GrammarError).format === 'function') {
+  } catch (e) {
+    const er = e as peggy.GrammarError;
+    if (typeof er.format === 'function') {
       er.message = (er as peggy.GrammarError).format([
         { source, text: text! },
       ]);

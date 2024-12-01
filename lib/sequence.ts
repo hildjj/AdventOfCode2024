@@ -1614,7 +1614,7 @@ export class NumberSequence extends Sequence<number> {
    * @param n - The number of sequence items to take
    * @returns Sequence of up to n items
    */
-  take(n: number): NumberSequence {
+  override take(n: number): NumberSequence {
     return new NumberSequence(super.take(n).it, n);
   }
 }

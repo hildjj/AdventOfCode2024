@@ -11,7 +11,7 @@ import {
 } from '../utils.ts';
 import { assertEquals, assertRejects, assertThrows } from '$std/assert/mod.ts';
 import { fromFileUrl } from '$std/path/from_file_url.ts';
-import peggy from '$peggy';
+import peggy, { LibraryResults } from 'peggy';
 
 const INVALID_FILE = `_____DOES___NOT___EXIST:${Deno.pid}`;
 
@@ -72,6 +72,7 @@ Deno.test('Utils', async (t) => {
 
     const parser: peggy.Parser = {
       SyntaxError: peggy.generate('a = "b"').SyntaxError,
+      // @ts-expect-error Peggy type safety?
       parse(): unknown {
         return ['3', '4'];
       },
