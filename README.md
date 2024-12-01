@@ -2,6 +2,21 @@
 
 My solutions to [AdventOfCode 2024](https://adventofcode.com/2024)
 
+## Automation
+
+This script/repo/tool does follow the automation guidelines on the
+/r/adventofcode [community wiki](https://www.reddit.com/r/adventofcode/wiki/faqs/automation). Specifically:
+
+- Outbound calls are made once from the developer's machine, and once from CI
+  on GitHub Actions.
+- Once inputs are downloaded, they are cached locally into the inputs/ directory by `day.ts`.  On GHA, this directory is cached to avoid re-requests.
+- If you suspect your input is corrupted, you can manually request a fresh
+  copy by deleting the cached version in the inputs/ directory.  You will
+  need to change the cache key manually in GHA to cause a re-download, which
+  will hopefully never be needed.
+- The User-Agent header in userAgentHeaderFunction() is set to me since I
+  maintain this tool.
+
 ## Pre-requisites
 
 - [Deno](https://deno.com/) 2.1.2
