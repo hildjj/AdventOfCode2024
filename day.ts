@@ -122,7 +122,6 @@ export async function newDay(a: MainArgs): Promise<void> {
 }
 
 export async function inputs(a: MainArgs): Promise<string> {
-
   const inputFile = adjacentFile(a, 'txt', 'inputs');
   try {
     await Deno.stat(inputFile);
