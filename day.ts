@@ -143,9 +143,10 @@ export async function inputs(a: MainArgs): Promise<string> {
     const inputSrc = `https://adventofcode.com/${YEAR}/day/${a.day}/input`;
     console.log(`Fetching ${inputSrc}`);
     const headers = new Headers({
-      'user-agent': `github.com/hildjj/AdventOfCode${YEAR} by joe-github@cursive.net`
+      'user-agent':
+        `github.com/hildjj/AdventOfCode${YEAR} by joe-github@cursive.net`,
     });
-    const res = await fetch(inputSrc, {headers});
+    const res = await fetch(inputSrc, { headers });
     const input = await res.text();
     if (!res.ok) {
       console.error(res.status, res.statusText);
