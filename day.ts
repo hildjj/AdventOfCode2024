@@ -146,6 +146,8 @@ try {
     });
   }
   const results = await mod(args);
+  const {duration} = performance.measure(`run_${args.day}`, args.day);
+
   if (args.record) {
     const str = Deno.inspect(results, {
       colors: false,
@@ -174,6 +176,10 @@ try {
     strAbbreviateSize: Infinity,
     trailingComma: true,
   }));
+
+  // Does not include parser generation or parse time, which are roughly
+  // a constant 8ms on my box.
+  console.log(`${duration.toFixed(4)} ms`);
 } catch (er) {
   console.error(er);
 }
