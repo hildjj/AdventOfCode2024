@@ -88,16 +88,6 @@ if (!args.day) {
   args.day = await last();
 }
 
-const cookieJar = new CookieJar([{
-  name: 'session',
-  value: Deno.env.get('AOC_COOKIE'),
-  domain: 'adventofcode.com',
-  path: '/',
-  secure: true,
-  httpOnly: false,
-}]);
-const fetch = wrapFetch({ cookieJar });
-
 export async function newDay(a: MainArgs): Promise<void> {
   a.inputs = true;
   if (template.length === 0) {
@@ -132,14 +122,34 @@ export async function newDay(a: MainArgs): Promise<void> {
 }
 
 export async function inputs(a: MainArgs): Promise<string> {
+
   const inputFile = adjacentFile(a, 'txt', 'inputs');
   try {
     await Deno.stat(inputFile);
   } catch (_ignored) {
+    const aoc = Deno.env.get('AOC_COOKIE');
+    if (!aoc) {
+      console.error('No AOC_COOKIE environment variable');
+      Deno.exit(1);
+    }
+    const cookieJar = new CookieJar([{
+      name: 'session',
+      value: aoc,
+      domain: 'adventofcode.com',
+      path: '/',
+      secure: true,
+      httpOnly: false,
+    }]);
+    const fetch = wrapFetch({ cookieJar });
     const inputSrc = `https://adventofcode.com/${YEAR}/day/${a.day}/input`;
     console.log(`Fetching ${inputSrc}`);
     const res = await fetch(inputSrc);
     const input = await res.text();
+    if (!res.ok) {
+      console.error(res.status, res.statusText);
+      console.error(input);
+      Deno.exit(1);
+    }
     await Deno.writeTextFile(inputFile, input);
   }
   return inputFile;
