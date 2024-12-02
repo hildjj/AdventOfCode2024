@@ -6,6 +6,7 @@ import { fromFileUrl, parse as pathParse } from '$std/path/mod.ts';
 import { parseArgs } from '$std/cli/parse_args.ts';
 import { adjacentFile, type MainArgs, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
+import { format } from '@std/fmt/duration';
 
 const YEAR = 2024;
 
@@ -101,6 +102,7 @@ export async function newDay(a: MainArgs): Promise<void> {
       Date.UTC(YEAR, 11, parseInt(a.day, 10), 5, 0, 0, 300),
     );
     const ms = d.getTime() - Date.now();
+    console.log(`Waiting until ${d.toISOString()} (${format(ms)})`);
     await wait(ms);
   }
 
