@@ -8,4 +8,4 @@ command
   / . { return null }
 
 num
-  = n:$[0-9]+ { return parseInt(n, 10) }
+  = n:$[0-9]|1..3| { return parseInt(n, 10) }
