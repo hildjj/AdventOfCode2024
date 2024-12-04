@@ -26,6 +26,28 @@ export const OppositeDir: Record<Dir, Dir> = {
   [Dir.N]: Dir.S,
 };
 
+export enum BoxDir {
+  NW,
+  N,
+  NE,
+  E,
+  SE,
+  S,
+  SW,
+  W,
+}
+
+export const AllBoxDirs: BoxDir[] = [
+  BoxDir.NW,
+  BoxDir.N,
+  BoxDir.NE,
+  BoxDir.E,
+  BoxDir.SE,
+  BoxDir.S,
+  BoxDir.SW,
+  BoxDir.W,
+];
+
 export class Point implements PointLike {
   static CARDINAL: [dx: number, dy: number][] = [
     [1, 0],
@@ -33,6 +55,17 @@ export class Point implements PointLike {
     [-1, 0],
     [0, -1],
   ];
+  static BOX: [dx: number, dy: number][] = [
+    [-1, -1],
+    [0, -1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [-1, 1],
+    [-1, 0],
+  ];
+
   x: number;
   y: number;
 
@@ -58,6 +91,15 @@ export class Point implements PointLike {
   inDir(dir: Dir): Point {
     const [dx, dy] = Point.CARDINAL[dir as number];
     return this.xlate(dx, dy);
+  }
+
+  inBoxDir<T>(dir: BoxDir, rect?: Rect<T>): Point | undefined {
+    const [dx, dy] = Point.BOX[dir];
+    const p = this.xlate(dx, dy);
+    if (rect && !rect.check(p)) {
+      return undefined;
+    }
+    return p;
   }
 
   stretch(len: number): Point {
@@ -86,6 +128,17 @@ export class Point implements PointLike {
       ret.push(p);
     }
     return ret;
+  }
+
+  *box(r?: Rect): Generator<[Point, BoxDir], undefined, undefined> {
+    for (const dir of AllBoxDirs) {
+      const [dx, dy] = Point.BOX[dir];
+      const p = this.xlate(dx, dy);
+      if (r && !r.check(p)) {
+        continue;
+      }
+      yield [p, dir];
+    }
   }
 
   toString(): string {
@@ -123,6 +176,13 @@ export type RectEachCallback<T> = (
   y: number,
   r: Rect<T>,
 ) => void;
+
+export type RectFilterCallback<T> = (
+  value: T,
+  x: number,
+  y: number,
+  r: Rect<T>,
+) => boolean;
 
 export class Rect<T = string> {
   #vals: T[][];
@@ -317,6 +377,30 @@ export class Rect<T = string> {
       }
     });
     return prev;
+  }
+
+  filter(callbackFn: RectFilterCallback<T>): Point[] {
+    const res: Point[] = [];
+    this.forEach((v, x, y) => {
+      if (callbackFn(v, x, y, this)) {
+        res.push(new Point(x, y));
+      }
+    });
+    return res;
+  }
+
+  ray(origin: Point, dir: BoxDir, len: number): T[] {
+    const res: T[] = [];
+    let p: Point = origin;
+    for (let i = 0; i < len; i++) {
+      res.push(this.get(p));
+      const q = p.inBoxDir(dir, this);
+      if (!q) {
+        break;
+      }
+      p = q;
+    }
+    return res;
   }
 
   /**
