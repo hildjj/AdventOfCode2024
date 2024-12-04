@@ -27,24 +27,18 @@ jobs:
           submodules: true
           token: ${{ secrets.GH_PAT }}
       - uses: actions/cache@v4
-        env:
-          DENO_DIR: ${{ runner.temp }}/deno_modules
         with:
-          path: ${{ env.DENO_DIR }}
-          key: ${{ hashFiles('deno.jsonc') }}
+          path: |
+            ~/.deno
+            ~/.cache/deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.jsonc') }}
       - name: Use Deno Version ${{ matrix.deno-version }}
         uses: denoland/setup-deno@v1
-        env:
-          DENO_DIR: ${{ runner.temp }}/deno_modules
         with:
           deno-version: ${{ matrix.deno-version }}
       - name: Lint
-        env:
-          DENO_DIR: ${{ runner.temp }}/deno_modules
         run: deno task check
       - name: Test
-        env:
-          DENO_DIR: ${{ runner.temp }}/deno_modules
         run: deno task ci
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
