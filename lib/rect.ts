@@ -145,6 +145,22 @@ export class Point implements PointLike {
     return `${this.x},${this.y}`;
   }
 
+  toNumber(size = 16): number {
+    return (this.x << size) | this.y;
+  }
+
+  static fromNumber(num: number, size = 16): Point {
+    return new Point(num >> size, num & ((1 << size) - 1));
+  }
+
+  static fromString(str: string): Point {
+    const m = str.match(/(\d+),(\d+)/);
+    if (!m) {
+      throw new Error(`Invalid format: "${str}"`);
+    }
+    return new Point(Number(m[1]), Number(m[2]));
+  }
+
   [Symbol.for('Deno.customInspect')](): string {
     return this.toString();
   }
