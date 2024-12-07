@@ -13,7 +13,7 @@ function calc(left: number, operands: number[], concat = false): boolean {
   if (concat) { // Part 2 adds concatenation operator
     const sleft = String(left);
     const sfirst = String(first);
-    const prefix = sleft.slice(0, -sfirst.length)
+    const prefix = sleft.slice(0, -sfirst.length);
     if ((prefix + sfirst === sleft) && calc(Number(prefix), rest, concat)) {
       return true;
     }
@@ -31,14 +31,14 @@ function calc(left: number, operands: number[], concat = false): boolean {
 function part1(inp: Parsed): number {
   return inp.reduce(
     (t, [tot, operands]) => t + (calc(tot, operands) ? tot : 0),
-    0
+    0,
   );
 }
 
 function part2(inp: Parsed): number {
   return inp.reduce(
     (t, [tot, operands]) => t + (calc(tot, operands, true) ? tot : 0),
-    0
+    0,
   );
 }
 

@@ -4,7 +4,7 @@ import { type MainArgs, parseFile } from './lib/utils.ts';
 type Parsed = string[][];
 
 function path(r: Rect): [Set<number>, Point] {
-  const [start] = r.filter(val => val === '^');
+  const [start] = r.filter((val) => val === '^');
   let pos = start;
   let dir = Dir.N;
   const visited = new Set<number>();
@@ -18,14 +18,14 @@ function path(r: Rect): [Set<number>, Point] {
     if (char === '.' || char === '^') {
       pos = ahead;
     } else {
-      dir = (dir + 1) % 4
+      dir = (dir + 1) % 4;
     }
   }
   return [visited, start];
 }
 
 function path2(r: Rect): boolean {
-  const [start] = r.filter(val => val === '^');
+  const [start] = r.filter((val) => val === '^');
   let pos = start;
   let dir = Dir.N;
   const visitedWithDir = new Set<string>();
@@ -43,21 +43,21 @@ function path2(r: Rect): boolean {
     if (char === '.' || char === '^') {
       pos = ahead;
     } else {
-      dir = (dir + 1) % 4
+      dir = (dir + 1) % 4;
     }
   }
 }
 
 function part1(inp: Parsed): number {
   const r = new Rect(inp);
-  const [visited] = path(r)
+  const [visited] = path(r);
   return visited.size;
 }
 
 function part2(inp: Parsed): number {
   const r = new Rect(inp);
-  const [visited, start] = path(r)
-  const points =  [...visited].map(v => Point.fromNumber(v))
+  const [visited, start] = path(r);
+  const points = [...visited].map((v) => Point.fromNumber(v));
   let tot = 0;
   for (const p of points) {
     if (p.equals(start)) {
