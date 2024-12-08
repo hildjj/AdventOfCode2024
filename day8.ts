@@ -1,4 +1,4 @@
-import { Point, Rect } from './lib/rect.ts';
+import { Point, PointSet, Rect } from './lib/rect.ts';
 import { Sequence } from './lib/sequence.ts';
 import { type MainArgs, parseFile } from './lib/utils.ts';
 
@@ -6,7 +6,7 @@ type Parsed = string[][];
 
 class Field extends Rect {
   antennae = new Map<string, Point[]>();
-  nodes: Point[] = [];
+  nodes = new PointSet();
 
   constructor(inp: Parsed, self = false) {
     super(inp);
@@ -22,22 +22,21 @@ class Field extends Rect {
       const p = new Point(x, y);
       m.push(p);
       if (self) {
-        this.nodes.push(p);
+        this.nodes.add(p);
       }
     });
   }
 
   push(p: Point): boolean {
     if (this.check(p)) {
-      this.nodes.push(p);
+      this.nodes.add(p);
       return true;
     }
     return false;
   }
 
-  count(): number {
-    const locs = new Set(this.nodes.map((n) => n.toString()));
-    return locs.size;
+  get count(): number {
+    return this.nodes.size;
   }
 }
 
@@ -46,14 +45,13 @@ function part1(inp: Parsed): number {
 
   for (const [_k, v] of r.antennae) {
     for (const [a, b] of new Sequence(v).combinations(2)) {
-      const dx = a.x - b.x;
-      const dy = a.y - b.y;
+      const [dx, dy] = a.delta(b);
       r.push(a.xlate(dx, dy));
       r.push(b.xlate(-dx, -dy));
     }
   }
 
-  return r.count();
+  return r.count;
 }
 
 function part2(inp: Parsed): number {
@@ -61,19 +59,18 @@ function part2(inp: Parsed): number {
 
   for (const [_k, v] of r.antennae) {
     for (const [a, b] of new Sequence(v).combinations(2)) {
-      const dx = a.x - b.x;
-      const dy = a.y - b.y;
-      let p = a.xlate(dx, dy);
-      while (r.push(p)) {
+      const [dx, dy] = a.delta(b);
+      let p = a;
+      do {
         p = p.xlate(dx, dy);
-      }
-      p = b.xlate(-dx, -dy);
-      while (r.push(p)) {
+      } while (r.push(p));
+      p = b;
+      do {
         p = p.xlate(-dx, -dy);
-      }
+      } while (r.push(p));
     }
   }
-  return r.count();
+  return r.count;
 }
 
 export default async function main(args: MainArgs): Promise<[number, number]> {

@@ -78,7 +78,8 @@ export class Point implements PointLike {
   }
 
   static sort(a: Point, b: Point): number {
-    return (a.x - b.x) || (a.y - b.y);
+    const [dx, dy] = a.delta(b);
+    return dx || dy;
   }
 
   xlate(d: PointLike): Point;
@@ -107,11 +108,16 @@ export class Point implements PointLike {
   }
 
   dist(p: PointLike): number {
-    return Math.sqrt(Math.abs(this.x - p.x) ** 2 + Math.abs(this.y - p.y) ** 2);
+    const [dx, dy] = this.delta(p);
+    return Math.sqrt((dx ** 2) + (dy ** 2));
   }
 
   manhattan(p: PointLike): number {
-    return Math.abs(this.x - p.x) + Math.abs(this.y - p.y);
+    return this.delta(p).reduce((t, d) => t + Math.abs(d), 0);
+  }
+
+  delta(p: PointLike): [dx: number, dy: number] {
+    return [this.x - p.x, this.y - p.y];
   }
 
   equals(p: PointLike): boolean {
@@ -584,10 +590,214 @@ export class InfiniteRect<T> extends Rect<T> {
   }
 
   slice(min: Point, max: Point): Rect<T> {
+    const [dx, dy] = max.delta(min);
     return InfiniteRect.ofSize<T>(
-      max.x - min.x + 1,
-      max.y - min.y + 1,
+      dx + 1,
+      dy + 1,
       (x: number, y: number): T => this.get(x, y),
     );
+  }
+}
+
+/**
+ * Massive overkill of a class so that I don't have to convert points to and
+ * from strings or numbers by hand as frequently just to store them in a set.
+ */
+export class PointSet {
+  #set: Set<number>;
+  #bits: number;
+
+  constructor(iterable?: Iterable<Point> | null, bits = 24) {
+    this.#set = new Set();
+    this.#bits = bits;
+    if (iterable) {
+      for (const i of iterable) {
+        this.#set.add(i.toNumber(this.#bits));
+      }
+    }
+  }
+
+  /**
+   * Appends a new element with a specified value to the end of the Set.
+   */
+  add(value: Point): this {
+    this.#set.add(value.toNumber(this.#bits));
+    return this;
+  }
+
+  /**
+   * Clear all entries from the set.
+   */
+  clear(): void {
+    this.#set.clear();
+  }
+
+  /**
+   * Removes a specified value from the Set.
+   *
+   * @returns Returns true if an element in the Set existed and has been
+   * removed, or false if the element does not exist.
+   */
+  delete(value: Point): boolean {
+    return this.#set.delete(value.toNumber(this.#bits));
+  }
+
+  /**
+   * Executes a provided function once per each value in the Set object, in
+   * insertion order.
+   */
+  forEach(
+    callbackfn: (value: Point, key: Point, set: PointSet) => void,
+    thisArg?: unknown,
+  ): void {
+    thisArg ??= this;
+    this.#set.forEach((value, _key) => {
+      const p = Point.fromNumber(value);
+      callbackfn.call(thisArg, p, p, this);
+    });
+  }
+
+  /**
+   * @returns a boolean indicating whether an element with the specified value exists in the Set or not.
+   */
+  has(value: Point): boolean {
+    return this.#set.has(value.toNumber(this.#bits));
+  }
+
+  /**
+   * @returns the number of (unique) elements in Set.
+   */
+  get size(): number {
+    return this.#set.size;
+  }
+
+  /** Iterates over values in the set. */
+  *[Symbol.iterator](): SetIterator<Point> {
+    for (const n of this.#set) {
+      yield Point.fromNumber(n, this.#bits);
+    }
+  }
+
+  /**
+   * Returns an iterable of [v,v] pairs for every value `v` in the set.
+   */
+  *entries(): SetIterator<[Point, Point]> {
+    for (const n of this.#set) {
+      const p = Point.fromNumber(n, this.#bits);
+      yield [p, p];
+    }
+  }
+
+  /**
+   * Despite its name, returns an iterable of the values in the set.
+   */
+  *keys(): SetIterator<Point> {
+    for (const n of this.#set) {
+      yield Point.fromNumber(n, this.#bits);
+    }
+  }
+
+  /**
+   * Returns an iterable of values in the set.
+   */
+  *values(): SetIterator<Point> {
+    for (const n of this.#set) {
+      yield Point.fromNumber(n, this.#bits);
+    }
+  }
+
+  #checkBits(other: PointSet): void {
+    if (other.#bits !== this.#bits) {
+      throw new Error(`Incompatible bits: ${this.#bits} != ${other.#bits}`);
+    }
+  }
+
+  /**
+   * @returns a new Set containing all the elements in this Set and also all
+   * the elements in the argument.
+   */
+  union(other: PointSet): PointSet {
+    this.#checkBits(other);
+    const res = new PointSet(null, this.#bits);
+    res.#set = this.#set.union(other.#set);
+    return res;
+  }
+
+  /**
+   * @returns a new Set containing all the elements which are both in this Set
+   * and in the argument.
+   */
+  intersection(other: PointSet): PointSet {
+    this.#checkBits(other);
+    const res = new PointSet(null, this.#bits);
+    res.#set = this.#set.intersection(other.#set);
+    return res;
+  }
+
+  /**
+   * @returns a new Set containing all the elements in this Set which are not
+   * also in the argument.
+   */
+  difference(other: PointSet): PointSet {
+    this.#checkBits(other);
+    const res = new PointSet(null, this.#bits);
+    res.#set = this.#set.difference(other.#set);
+    return res;
+  }
+
+  /**
+   * @returns a new Set containing all the elements which are in either this
+   * Set or in the argument, but not in both.
+   */
+  symmetricDifference(other: PointSet): PointSet {
+    this.#checkBits(other);
+    const res = new PointSet(null, this.#bits);
+    res.#set = this.#set.symmetricDifference(other.#set);
+    return res;
+  }
+
+  /**
+   * @returns a boolean indicating whether all the elements in this Set are
+   * also in the argument.
+   */
+  isSubsetOf(other: PointSet): boolean {
+    this.#checkBits(other);
+    return this.#set.isSubsetOf(other.#set);
+  }
+
+  /**
+   * @returns a boolean indicating whether all the elements in the argument
+   * are also in this Set.
+   */
+  isSupersetOf(other: PointSet): boolean {
+    this.#checkBits(other);
+    return this.#set.isSupersetOf(other.#set);
+  }
+
+  /**
+   * @returns a boolean indicating whether this Set has no elements in common
+   * with the argument.
+   */
+  isDisjointFrom(other: PointSet): boolean {
+    this.#checkBits(other);
+    return this.#set.isDisjointFrom(other.#set);
+  }
+
+  [Symbol.for('Deno.customInspect')](): string {
+    let ret = `PointSet(${this.size}) { `;
+    let first = true;
+    for (const p of this) {
+      if (first) {
+        first = false;
+      } else {
+        ret += ', ';
+      }
+      ret += `[${p.toString()}]`;
+    }
+    if (!first) {
+      ret += ' ';
+    }
+    ret += '}';
+    return ret;
   }
 }
