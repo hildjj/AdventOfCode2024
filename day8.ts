@@ -28,20 +28,15 @@ class Field extends Rect {
   }
 
   push(p: Point): boolean {
-    if (!this.check(p)) {
-      return false;
+    if (this.check(p)) {
+      this.nodes.push(p);
+      return true;
     }
-    this.nodes.push(p);
-    return true;
+    return false;
   }
 
   count(): number {
-    const locs = new Set<string>();
-    for (const p of this.nodes) {
-      if (this.check(p)) {
-        locs.add(p.toString());
-      }
-    }
+    const locs = new Set(this.nodes.map((n) => n.toString()));
     return locs.size;
   }
 }
