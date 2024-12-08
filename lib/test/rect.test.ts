@@ -1,4 +1,4 @@
-import { Dir, InfiniteRect, Point, Rect } from '../rect.ts';
+import { Dir, InfiniteRect, Point, PointSet, Rect } from '../rect.ts';
 
 import {
   assert,
@@ -202,5 +202,116 @@ Deno.test('InfinitRect', async (t) => {
     ]);
     const s = ir.slice(new Point(0, 0), new Point(1, 1));
     assertEquals(Deno.inspect(s), 'ab\nde');
+  });
+});
+
+Deno.test('PointSet', async (t) => {
+  await t.step('create', () => {
+    let p = new PointSet();
+    assertEquals(p.size, 0);
+    p = new PointSet(null);
+    assertEquals(p.size, 0);
+    p = new PointSet(undefined);
+    assertEquals(p.size, 0);
+    p = new PointSet([]);
+    assertEquals(p.size, 0);
+    p = new PointSet([new Point(1, 1)]);
+    assertEquals(p.size, 1);
+  });
+
+  await t.step('add/delete', () => {
+    const p = new Point(1, 1);
+    const s = new PointSet();
+    assertEquals(s.size, 0);
+    s.add(p);
+    assertEquals(s.size, 1);
+    s.add(p);
+    assertEquals(s.size, 1);
+    s.delete(p);
+    assertEquals(s.size, 0);
+    s.add(p);
+    assertEquals(s.size, 1);
+    s.clear();
+    assertEquals(s.size, 0);
+  });
+
+  await t.step('forEach', () => {
+    const s = new PointSet();
+    for (let x = 0; x < 10; x++) {
+      s.add(new Point(x, 0));
+    }
+    assertEquals(s.size, 10);
+    const boo = {};
+    s.forEach(function (p): void {
+      assertEquals(p.constructor.name, 'Point');
+      // @ts-expect-error Shadowed this
+      assertEquals(this, boo);
+    }, boo);
+
+    assert(s.has(new Point(5, 0)));
+
+    let count = 0;
+    for (const _p of s) {
+      count++;
+    }
+    assertEquals(count, 10);
+
+    count = 0;
+    for (const [_p] of s.entries()) {
+      count++;
+    }
+    assertEquals(count, 10);
+
+    count = 0;
+    for (const _p of s.keys()) {
+      count++;
+    }
+    assertEquals(count, 10);
+
+    count = 0;
+    for (const _p of s.values()) {
+      count++;
+    }
+    assertEquals(count, 10);
+  });
+
+  await t.step('union', () => {
+    const a = new PointSet([
+      new Point(0, 0),
+      new Point(0, 2),
+      new Point(0, 3),
+      new Point(0, 4),
+    ]);
+    const b = new PointSet([
+      new Point(0, 1),
+      new Point(0, 3),
+      new Point(0, 5),
+    ]);
+    const c = new PointSet(null, 16);
+
+    assertThrows(() => a.union(c));
+    const u = a.union(b);
+    assertEquals(u.size, 6);
+    const i = a.intersection(b);
+    assertEquals(i.size, 1);
+    const d = a.difference(b);
+    assertEquals(d.size, 3);
+    const s = a.symmetricDifference(b);
+    assertEquals(s.size, 5);
+    assertFalse(a.isSubsetOf(b));
+    assertFalse(a.isSupersetOf(b));
+    assertFalse(a.isDisjointFrom(b));
+  });
+
+  await t.step('customInspect', () => {
+    const a = new PointSet([
+      new Point(0, 0),
+      new Point(0, 2),
+      new Point(0, 3),
+      new Point(0, 4),
+    ]);
+    // @ts-expect-error No type info available
+    const s = a[Symbol.for('Deno.customInspect')]();
+    assertEquals(s, 'PointSet(4) { [0,0], [0,2], [0,3], [0,4] }');
   });
 });

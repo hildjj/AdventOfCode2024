@@ -1,3 +1,4 @@
+import { Point, PointSet } from './lib/rect.ts';
 import { type MainArgs, parseFile } from './lib/utils.ts';
 
 type Parsed = [[number, number][], number[][]];
@@ -16,19 +17,18 @@ function part2(inp: number[][][]): number {
 
 export default async function main(args: MainArgs): Promise<[number, number]> {
   const inp = await parseFile<Parsed>(args);
-  const order = new Set<string>();
+  // These are number tuples, not points, but... shrug.
+  const order = new PointSet();
   for (const [x, y] of inp[0]) {
-    order.add(`${x},${y}`);
+    order.add(new Point(x, y));
   }
   const beforeAndAfter = inp[1].map((pages) => {
     const sorted = [...pages].sort((a, b) => {
-      if (order.has(`${a},${b}`)) {
+      if (order.has(new Point(a, b))) {
         return -1;
       }
-      if (order.has(`${b},${a}`)) {
-        return 1;
-      }
-      return 0;
+      // There are no pairs that aren't in one direction or the other.
+      return 1;
     });
     return [pages, sorted];
   });
