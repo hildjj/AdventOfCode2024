@@ -9,11 +9,11 @@ function genBlocks(inp: Parsed): [blocks: number[], file: number] {
   let block = 0;
   for (const n of inp) {
     if (free) {
-      for (let i=0; i<n; i++) {
+      for (let i = 0; i < n; i++) {
         blocks[block++] = NaN;
       }
     } else {
-      for (let i=0; i<n; i++) {
+      for (let i = 0; i < n; i++) {
         blocks[block++] = file;
       }
       file++;
@@ -59,7 +59,7 @@ function part2(inp: Parsed): number {
   let initial = 0;
 
   for (let file = maxFile; file >= 0; file--) {
-    // TODO: move to lastIndexOf
+    // TODO(hildjj): move to lastIndexOf
     const start = blocks.indexOf(file, initial);
     if (start === -1) {
       continue;
