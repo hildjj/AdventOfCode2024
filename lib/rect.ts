@@ -124,7 +124,7 @@ export class Point implements PointLike {
     return (this.x === p.x) && (this.y === p.y);
   }
 
-  cardinal(r?: Rect): Point[] {
+  cardinal<T>(r?: Rect<T>): Point[] {
     const ret: Point[] = [];
     for (const [dx, dy] of Point.CARDINAL) {
       const p = this.xlate(dx, dy);
