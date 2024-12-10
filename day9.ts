@@ -1,18 +1,22 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
 
 type Parsed = number[];
+type File = [block: number, length: number];
 
-function genBlocks(inp: Parsed): [blocks: number[], file: number] {
+function genBlocks(inp: Parsed): [blocks: number[], files: File[]] {
   const blocks: number[] = [];
+  const files: File[] = [];
   let file = 0;
   let free = false;
   let block = 0;
+
   for (const n of inp) {
     if (free) {
       for (let i = 0; i < n; i++) {
         blocks[block++] = NaN;
       }
     } else {
+      files.push([block, n]);
       for (let i = 0; i < n; i++) {
         blocks[block++] = file;
       }
@@ -21,12 +25,12 @@ function genBlocks(inp: Parsed): [blocks: number[], file: number] {
     free = !free;
   }
 
-  return [blocks, file - 1];
+  return [blocks, files];
 }
 
 function part1(inp: Parsed): number {
-  const [blocks, maxFile] = genBlocks(inp);
-  let file = maxFile;
+  const [blocks, files] = genBlocks(inp);
+  let file = files.length;
   let i = 0;
   let j = blocks.length - 1;
   while (i < j) {
@@ -38,7 +42,7 @@ function part1(inp: Parsed): number {
     }
     while (j > i) {
       file = blocks[j];
-      delete blocks[j];
+      blocks[j] = NaN;
       if (!isNaN(file)) {
         break;
       }
@@ -51,27 +55,16 @@ function part1(inp: Parsed): number {
     }
   }
 
-  return blocks.reduce((t, v, n) => t + (v === undefined ? 0 : v * n), 0);
+  return blocks.reduce((t, v, n) => t + (isNaN(v) ? 0 : v * n), 0);
 }
 
 function part2(inp: Parsed): number {
-  const [blocks, maxFile] = genBlocks(inp);
+  const [blocks, files] = genBlocks(inp);
   let initial = 0;
 
-  for (let file = maxFile; file >= 0; file--) {
-    // TODO(hildjj): move to lastIndexOf
-    const start = blocks.indexOf(file, initial);
-    if (start === -1) {
-      continue;
-    }
-    let end = start;
-    while (end < blocks.length) {
-      if (blocks[++end] !== file) {
-        break;
-      }
-    }
+  for (let file = files.length - 1; file >= 0; file--) {
+    const [start, len] = files[file];
 
-    const len = end - start;
     let i = initial;
     initial = NaN;
 
@@ -97,10 +90,9 @@ function part2(inp: Parsed): number {
       }
     }
     if (i < start) {
-      for (let x = i; x < i + len; x++) {
-        blocks[x] = file;
-        blocks[start + x - i] = NaN;
-      }
+      const end = start + len;
+      blocks.copyWithin(i, start, end);
+      blocks.fill(NaN, start, end);
       i += len;
     }
   }
