@@ -1,10 +1,9 @@
-import { type MainArgs, parseFile } from './lib/utils.ts';
+import { type MainArgs, divmod, parseFile } from './lib/utils.ts';
 
 type Parsed = number[];
 
 function mapAdd(m: Map<number, number>, k: number, v = 1): void {
-  const se = m.get(k);
-  m.set(k, (se ?? 0) + v);
+  m.set(k, (m.get(k) ?? 0) + v);
 }
 
 function blink(inp: Parsed, num: number): number {
@@ -23,10 +22,10 @@ function blink(inp: Parsed, num: number): number {
         mapAdd(next, 1, v);
       } else {
         const ks = String(k);
-        if (ks.length % 2 === 0) {
-          const kl = ks.length / 2;
-          mapAdd(next, Number(ks.slice(0, kl)), v);
-          mapAdd(next, Number(ks.slice(kl)), v);
+        const [div, mod] = divmod(ks.length, 2);
+        if (mod === 0) {
+          mapAdd(next, Number(ks.slice(0, div)), v);
+          mapAdd(next, Number(ks.slice(div)), v);
         } else {
           mapAdd(next, k * 2024, v);
         }
@@ -34,11 +33,7 @@ function blink(inp: Parsed, num: number): number {
     }
     prev = next;
   }
-  let count = 0;
-  for (const [_k, v] of prev) {
-    count += v;
-  }
-  return count;
+  return prev.values().reduce((t, v) => t + v, 0);
 }
 
 function part1(inp: Parsed): number {

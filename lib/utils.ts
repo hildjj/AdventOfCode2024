@@ -177,12 +177,11 @@ export function adjacentFile(
  */
 export function mod<T extends number | bigint>(x: T, y: T): T {
   // == works with either 0 or 0n.
-  // eslint-disable-next-line eqeqeq
-  if (y === 0) {
+  // deno-lint-ignore eqeqeq
+  if (y == 0) {
     throw new Error('Division by zero');
   }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore: TS2365.  tsc can't see that x and y are always the same type
+  // @ts-expect-error: TS2365.  tsc can't see that x and y are always the same type
   return ((x % y) + y) % y;
 }
 
