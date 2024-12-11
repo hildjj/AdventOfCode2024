@@ -194,7 +194,7 @@ export function mod<T extends number | bigint>(x: T, y: T): T {
  */
 export function divmod<T extends number | bigint>(x: T, y: T): [T, T] {
   let q = (x / y) as unknown as T;
-  const r: T = mod(x, y);
+  const r = mod(x, y);
   if (typeof x === 'bigint') {
     // Not only does Math.floor not work for BigInt, it's not needed because
     // `/` does the right thing in the first place.
