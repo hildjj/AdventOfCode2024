@@ -177,12 +177,11 @@ export function adjacentFile(
  */
 export function mod<T extends number | bigint>(x: T, y: T): T {
   // == works with either 0 or 0n.
-  // eslint-disable-next-line eqeqeq
-  if (y === 0) {
+  // deno-lint-ignore eqeqeq
+  if (y == 0) {
     throw new Error('Division by zero');
   }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore: TS2365.  tsc can't see that x and y are always the same type
+  // @ts-expect-error: TS2365.  tsc can't see that x and y are always the same type
   return ((x % y) + y) % y;
 }
 
@@ -195,7 +194,7 @@ export function mod<T extends number | bigint>(x: T, y: T): T {
  */
 export function divmod<T extends number | bigint>(x: T, y: T): [T, T] {
   let q = (x / y) as unknown as T;
-  const r: T = mod(x, y);
+  const r = mod(x, y);
   if (typeof x === 'bigint') {
     // Not only does Math.floor not work for BigInt, it's not needed because
     // `/` does the right thing in the first place.
