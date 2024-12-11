@@ -1,4 +1,4 @@
-import { type MainArgs, divmod, parseFile } from './lib/utils.ts';
+import { divmod, type MainArgs, parseFile } from './lib/utils.ts';
 
 type Parsed = number[];
 
