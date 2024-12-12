@@ -168,9 +168,8 @@ export class Point implements PointLike {
       const [dx, dy] = Point.BOX[dir];
       const p = this.xlate(dx, dy);
       if (r.has(p)) {
-        continue;
+        ret.add(dir);
       }
-      ret.add(dir);
     }
     return ret;
   }

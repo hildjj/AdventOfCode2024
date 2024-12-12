@@ -53,7 +53,9 @@ function sides(found: PointSet): number {
     // .X  .X
     if (!box.has(BoxDir.N) && !box.has(BoxDir.W)) {
       tot++;
-    } // .X
+    }
+
+    // .X
     // XX
     else if (!box.has(BoxDir.NW) && box.has(BoxDir.N) && box.has(BoxDir.W)) {
       tot++;
@@ -63,7 +65,9 @@ function sides(found: PointSet): number {
     // X.  X.
     if (!box.has(BoxDir.N) && !box.has(BoxDir.E)) {
       tot++;
-    } // X.
+    }
+
+    // X.
     // XX
     else if (!box.has(BoxDir.NE) && box.has(BoxDir.N) && box.has(BoxDir.E)) {
       tot++;
@@ -73,7 +77,9 @@ function sides(found: PointSet): number {
     // ..  .X
     if (!box.has(BoxDir.S) && !box.has(BoxDir.E)) {
       tot++;
-    } // XX
+    }
+
+    // XX
     // X.
     else if (!box.has(BoxDir.SE) && box.has(BoxDir.S) && box.has(BoxDir.E)) {
       tot++;
@@ -83,7 +89,9 @@ function sides(found: PointSet): number {
     // ..  X.
     if (!box.has(BoxDir.S) && !box.has(BoxDir.W)) {
       tot++;
-    } // XX
+    }
+
+    // XX
     // .X
     else if (!box.has(BoxDir.SW) && box.has(BoxDir.S) && box.has(BoxDir.W)) {
       tot++;
