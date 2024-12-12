@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run -A
 
 import $ from '$dax';
-import { assertEquals } from '$std/assert/mod.ts';
-import { fromFileUrl, parse as pathParse } from '$std/path/mod.ts';
-import { parseArgs } from '$std/cli/parse_args.ts';
+import { assertEquals } from '@std/assert';
+import { fromFileUrl, parse as pathParse } from '@std/path';
+import { parseArgs } from '@std/cli';
 import { adjacentFile, type MainArgs, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
 import { format } from '@std/fmt/duration';
@@ -13,6 +13,7 @@ const YEAR = 2024;
 const args = parseArgs(Deno.args, {
   boolean: [
     'benchmark',
+    'checkin',
     'help',
     'new',
     'record',
@@ -24,6 +25,7 @@ const args = parseArgs(Deno.args, {
   string: ['day'],
   alias: {
     b: 'benchmark',
+    c: 'checkin',
     d: 'day',
     h: 'help',
     i: 'inputs',
@@ -46,6 +48,7 @@ ARGS passed to day's main function as args._
 
 Options:
   -b,--benchmark    Run benchmarks
+  -c,--checkin      Do first checkin of the day
   -d,--day <number> Day (default: latest day unless --new)
   -h,--help         Print help text and exit
   -i,--inputs       Get inputs for the target day.  Implied by --new.
@@ -87,6 +90,12 @@ async function last(): Promise<string> {
 
 if (!args.day) {
   args.day = await last();
+}
+
+export async function checkin(a: MainArgs): Promise<void> {
+  await $`deno task check`;
+  await $`cd inputs && git add day${a.day}.txt && git ci --no-verify -m "Day ${a.day}" && git push`;
+  await $`git add . && git ci -m "Day ${a.day}" && git push && gh pr create --fill`;
 }
 
 export async function newDay(a: MainArgs): Promise<void> {
@@ -226,6 +235,11 @@ if (import.meta.main) {
       await $`code ${inputFile}`;
       Deno.exit(0);
     }
+  }
+
+  if (args.checkin) {
+    await checkin(args);
+    Deno.exit(0);
   }
 
   await test(args);

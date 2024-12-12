@@ -1,5 +1,5 @@
 import { ocr, render } from '../ocr.ts';
-import { assertEquals, assertThrows } from '$std/assert/mod.ts';
+import { assertEquals, assertThrows } from '@std/assert';
 
 // Explicit spaces-as-"o" at EOL.
 const ALPHA = `\

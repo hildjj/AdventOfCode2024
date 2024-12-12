@@ -1,6 +1,6 @@
-import { dirname, fromFileUrl, join } from '$std/path/mod.ts';
-import { TextLineStream } from '$std/streams/mod.ts';
-import { assert } from '$std/assert/mod.ts';
+import { dirname, fromFileUrl, join } from '@std/path';
+import { TextLineStream } from '@std/streams';
+import { assert } from '@std/assert';
 import peggy from 'peggy';
 
 export interface MainArgs {

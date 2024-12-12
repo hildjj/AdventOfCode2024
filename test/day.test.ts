@@ -1,6 +1,6 @@
 import { defaultArgs, type MainEntry } from '../lib/utils.ts';
-import { assertEquals } from '$std/assert/assert_equals.ts';
-import { dirname } from '$std/path/dirname.ts';
+import { assertEquals } from '@std/assert';
+import { dirname } from '@std/path';
 import { inputs } from '../day.ts';
 
 Deno.test('days', async (t) => {

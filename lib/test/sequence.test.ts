@@ -1,10 +1,5 @@
 import { NumberSequence, Sequence } from '../sequence.ts';
-import {
-  assert,
-  assertEquals,
-  assertFalse,
-  assertThrows,
-} from '$std/assert/mod.ts';
+import { assert, assertEquals, assertFalse, assertThrows } from '@std/assert';
 
 Deno.test('Sequence', async (t) => {
   await t.step('isIterable', () => {

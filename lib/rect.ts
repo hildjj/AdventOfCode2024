@@ -48,6 +48,8 @@ export const AllBoxDirs: BoxDir[] = [
   BoxDir.W,
 ];
 
+const scratch = new DataView(new ArrayBuffer(4));
+
 export class Point implements PointLike {
   static CARDINAL: [dx: number, dy: number][] = [
     [1, 0],
@@ -151,12 +153,15 @@ export class Point implements PointLike {
     return `${this.x},${this.y}`;
   }
 
-  toNumber(size = 16): number {
-    return (this.x << size) | this.y;
+  toNumber(): number {
+    scratch.setInt16(0, this.x);
+    scratch.setInt16(2, this.y);
+    return scratch.getUint32(0);
   }
 
-  static fromNumber(num: number, size = 16): Point {
-    return new Point(num >> size, num & ((1 << size) - 1));
+  static fromNumber(num: number): Point {
+    scratch.setUint32(0, num);
+    return new Point(scratch.getInt16(0), scratch.getInt16(2));
   }
 
   static fromString(str: string): Point {
@@ -605,14 +610,12 @@ export class InfiniteRect<T> extends Rect<T> {
  */
 export class PointSet {
   #set: Set<number>;
-  #bits: number;
 
-  constructor(iterable?: Iterable<Point> | null, bits = 24) {
+  constructor(iterable?: Iterable<Point> | null) {
     this.#set = new Set();
-    this.#bits = bits;
     if (iterable) {
       for (const i of iterable) {
-        this.#set.add(i.toNumber(this.#bits));
+        this.#set.add(i.toNumber());
       }
     }
   }
@@ -621,7 +624,7 @@ export class PointSet {
    * Appends a new element with a specified value to the end of the Set.
    */
   add(value: Point): this {
-    this.#set.add(value.toNumber(this.#bits));
+    this.#set.add(value.toNumber());
     return this;
   }
 
@@ -639,7 +642,7 @@ export class PointSet {
    * removed, or false if the element does not exist.
    */
   delete(value: Point): boolean {
-    return this.#set.delete(value.toNumber(this.#bits));
+    return this.#set.delete(value.toNumber());
   }
 
   /**
@@ -661,7 +664,7 @@ export class PointSet {
    * @returns a boolean indicating whether an element with the specified value exists in the Set or not.
    */
   has(value: Point): boolean {
-    return this.#set.has(value.toNumber(this.#bits));
+    return this.#set.has(value.toNumber());
   }
 
   /**
@@ -674,7 +677,7 @@ export class PointSet {
   /** Iterates over values in the set. */
   *[Symbol.iterator](): SetIterator<Point> {
     for (const n of this.#set) {
-      yield Point.fromNumber(n, this.#bits);
+      yield Point.fromNumber(n);
     }
   }
 
@@ -683,7 +686,7 @@ export class PointSet {
    */
   *entries(): SetIterator<[Point, Point]> {
     for (const n of this.#set) {
-      const p = Point.fromNumber(n, this.#bits);
+      const p = Point.fromNumber(n);
       yield [p, p];
     }
   }
@@ -693,7 +696,7 @@ export class PointSet {
    */
   *keys(): SetIterator<Point> {
     for (const n of this.#set) {
-      yield Point.fromNumber(n, this.#bits);
+      yield Point.fromNumber(n);
     }
   }
 
@@ -702,13 +705,7 @@ export class PointSet {
    */
   *values(): SetIterator<Point> {
     for (const n of this.#set) {
-      yield Point.fromNumber(n, this.#bits);
-    }
-  }
-
-  #checkBits(other: PointSet): void {
-    if (other.#bits !== this.#bits) {
-      throw new Error(`Incompatible bits: ${this.#bits} != ${other.#bits}`);
+      yield Point.fromNumber(n);
     }
   }
 
@@ -717,8 +714,7 @@ export class PointSet {
    * the elements in the argument.
    */
   union(other: PointSet): PointSet {
-    this.#checkBits(other);
-    const res = new PointSet(null, this.#bits);
+    const res = new PointSet(null);
     res.#set = this.#set.union(other.#set);
     return res;
   }
@@ -728,8 +724,7 @@ export class PointSet {
    * and in the argument.
    */
   intersection(other: PointSet): PointSet {
-    this.#checkBits(other);
-    const res = new PointSet(null, this.#bits);
+    const res = new PointSet(null);
     res.#set = this.#set.intersection(other.#set);
     return res;
   }
@@ -739,8 +734,7 @@ export class PointSet {
    * also in the argument.
    */
   difference(other: PointSet): PointSet {
-    this.#checkBits(other);
-    const res = new PointSet(null, this.#bits);
+    const res = new PointSet(null);
     res.#set = this.#set.difference(other.#set);
     return res;
   }
@@ -750,8 +744,7 @@ export class PointSet {
    * Set or in the argument, but not in both.
    */
   symmetricDifference(other: PointSet): PointSet {
-    this.#checkBits(other);
-    const res = new PointSet(null, this.#bits);
+    const res = new PointSet(null);
     res.#set = this.#set.symmetricDifference(other.#set);
     return res;
   }
@@ -761,7 +754,6 @@ export class PointSet {
    * also in the argument.
    */
   isSubsetOf(other: PointSet): boolean {
-    this.#checkBits(other);
     return this.#set.isSubsetOf(other.#set);
   }
 
@@ -770,7 +762,6 @@ export class PointSet {
    * are also in this Set.
    */
   isSupersetOf(other: PointSet): boolean {
-    this.#checkBits(other);
     return this.#set.isSupersetOf(other.#set);
   }
 
@@ -779,7 +770,6 @@ export class PointSet {
    * with the argument.
    */
   isDisjointFrom(other: PointSet): boolean {
-    this.#checkBits(other);
     return this.#set.isDisjointFrom(other.#set);
   }
 
