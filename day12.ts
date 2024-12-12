@@ -49,51 +49,43 @@ function sides(found: PointSet): number {
   let tot = 0;
   for (const p of found) {
     const box = p.boxSet(found);
-    // ..  X.
-    // .X  .X
     if (!box.has(BoxDir.N) && !box.has(BoxDir.W)) {
+      // ..  X.
+      // .X  .X
+      tot++;
+    } else if (!box.has(BoxDir.NW) && box.has(BoxDir.N) && box.has(BoxDir.W)) {
+      // .X
+      // XX
       tot++;
     }
 
-    // .X
-    // XX
-    else if (!box.has(BoxDir.NW) && box.has(BoxDir.N) && box.has(BoxDir.W)) {
-      tot++;
-    }
-
-    // ..  .X
-    // X.  X.
     if (!box.has(BoxDir.N) && !box.has(BoxDir.E)) {
+      // ..  .X
+      // X.  X.
+      tot++;
+    } else if (!box.has(BoxDir.NE) && box.has(BoxDir.N) && box.has(BoxDir.E)) {
+      // X.
+      // XX
       tot++;
     }
 
-    // X.
-    // XX
-    else if (!box.has(BoxDir.NE) && box.has(BoxDir.N) && box.has(BoxDir.E)) {
-      tot++;
-    }
-
-    // X.  X.
-    // ..  .X
     if (!box.has(BoxDir.S) && !box.has(BoxDir.E)) {
+      // X.  X.
+      // ..  .X
+      tot++;
+    } else if (!box.has(BoxDir.SE) && box.has(BoxDir.S) && box.has(BoxDir.E)) {
+      // XX
+      // X.
       tot++;
     }
 
-    // XX
-    // X.
-    else if (!box.has(BoxDir.SE) && box.has(BoxDir.S) && box.has(BoxDir.E)) {
-      tot++;
-    }
-
-    // .X  .X
-    // ..  X.
     if (!box.has(BoxDir.S) && !box.has(BoxDir.W)) {
+      // .X  .X
+      // ..  X.
       tot++;
-    }
-
-    // XX
-    // .X
-    else if (!box.has(BoxDir.SW) && box.has(BoxDir.S) && box.has(BoxDir.W)) {
+    } else if (!box.has(BoxDir.SW) && box.has(BoxDir.S) && box.has(BoxDir.W)) {
+      // XX
+      // .X
       tot++;
     }
   }
