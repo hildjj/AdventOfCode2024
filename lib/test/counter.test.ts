@@ -1,5 +1,5 @@
 import { Counter } from '../counter.ts';
-import { assertEquals } from '$std/assert/mod.ts';
+import { assertEquals } from '@std/assert';
 
 Deno.test('Counter', () => {
   const c = new Counter<number>();
