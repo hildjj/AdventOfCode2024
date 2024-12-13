@@ -138,15 +138,40 @@ export class Point implements PointLike {
     return ret;
   }
 
-  *box(r?: Rect): Generator<[Point, BoxDir], undefined, undefined> {
+  *box(r?: Rect | PointSet): Generator<[Point, BoxDir], undefined, undefined> {
     for (const dir of AllBoxDirs) {
       const [dx, dy] = Point.BOX[dir];
       const p = this.xlate(dx, dy);
-      if (r && !r.check(p)) {
+      if (r && !r.has(p)) {
         continue;
       }
       yield [p, dir];
     }
+  }
+
+  boxMap(r?: Rect | PointSet): Map<BoxDir, Point> {
+    const ret = new Map<BoxDir, Point>();
+    for (const dir of AllBoxDirs) {
+      const [dx, dy] = Point.BOX[dir];
+      const p = this.xlate(dx, dy);
+      if (r && !r.has(p)) {
+        continue;
+      }
+      ret.set(dir, p);
+    }
+    return ret;
+  }
+
+  boxSet(r: Rect | PointSet): Set<BoxDir> {
+    const ret = new Set<BoxDir>();
+    for (const dir of AllBoxDirs) {
+      const [dx, dy] = Point.BOX[dir];
+      const p = this.xlate(dx, dy);
+      if (r.has(p)) {
+        ret.add(dir);
+      }
+    }
+    return ret;
   }
 
   toString(): string {
@@ -264,6 +289,10 @@ export class Rect<T = string> {
     const [x, y] = (typeof xp === 'number') ? [xp, yp!] : [xp.x, xp.y];
     return (y >= 0) && (y < this.#vals.length) &&
       (x >= 0) && (x < this.#vals[y].length);
+  }
+
+  has(p: PointLike): boolean {
+    return this.check(p);
   }
 
   /**
