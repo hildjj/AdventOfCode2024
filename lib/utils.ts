@@ -211,6 +211,62 @@ export function divmod<T extends number | bigint>(x: T, y: T): [T, T] {
   return [Math.floor(q) as T, r];
 }
 
+export function abs<T extends number | bigint>(a: T): T {
+  if (typeof a === 'bigint') {
+    return (a < 0 ? -a : a) as T;
+  }
+  return Math.abs(a) as T;
+}
+
+export function sign<T extends number | bigint>(a: T): T {
+  if (typeof a === 'bigint') {
+    if (a === 0n) {
+      return 0n as T;
+    }
+    return ((a < 0n) ? -1n : 1n) as T;
+  }
+  return Math.sign(a) as T;
+}
+
+export function egcd<T extends number | bigint>(
+  a: T,
+  b: T,
+): [gcd: T, a: T, b: T] {
+  const bi = typeof a === 'bigint';
+  let s0 = (bi ? 1n : 1) as T;
+  let s1 = (bi ? 0n : 0) as T;
+  let t0 = s1;
+  let t1 = s0;
+  const sa = sign(a);
+  const sb = sign(b);
+
+  // Needs to work for both 0 and 0n
+  // deno-lint-ignore eqeqeq
+  if (a == 0) {
+    return [b, s1, t1];
+  }
+  if (!bi) {
+    if ((isNaN(a as number) || isNaN(b as number))) {
+      return [NaN as T, NaN as T, NaN as T];
+    }
+    if ((!isFinite(a as number) || !isFinite(b as number))) {
+      return [Infinity as T, Infinity as T, Infinity as T];
+    }
+  }
+
+  a = abs(a);
+  b = abs(b);
+
+  // deno-lint-ignore eqeqeq
+  while (b != 0) {
+    const [q, r] = divmod(a, b);
+    [s0, s1] = [s1, (s0 - (q * s1)) as T];
+    [t0, t1] = [t1, (t0 - (q * t1)) as T];
+    [a, b] = [b, r];
+  }
+  return [a, sa * s0 as T, sb * t0 as T];
+}
+
 export function gcd<T extends number | bigint>(...n: T[]): T {
   switch (n.length) {
     case 0:
