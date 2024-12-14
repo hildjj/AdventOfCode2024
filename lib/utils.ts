@@ -233,18 +233,9 @@ export function egcd<T extends number | bigint>(
   b: T,
 ): [gcd: T, a: T, b: T] {
   const bi = typeof a === 'bigint';
-  let s0 = (bi ? 1n : 1) as T;
-  let s1 = (bi ? 0n : 0) as T;
-  let t0 = s1;
-  let t1 = s0;
-  const sa = sign(a);
-  const sb = sign(b);
+  let [s0, s1] = [bi ? 1n : 1, bi ? 0n : 0] as T[];
+  let [t0, t1] = [s1, s0] as T[];
 
-  // Needs to work for both 0 and 0n
-  // deno-lint-ignore eqeqeq
-  if (a == 0) {
-    return [b, s1, t1];
-  }
   if (!bi) {
     if ((isNaN(a as number) || isNaN(b as number))) {
       return [NaN as T, NaN as T, NaN as T];
@@ -253,9 +244,15 @@ export function egcd<T extends number | bigint>(
       return [Infinity as T, Infinity as T, Infinity as T];
     }
   }
+  // Needs to work for both 0 and 0n
+  // deno-lint-ignore eqeqeq
+  if (a == 0) {
+    return [b, s1, t1];
+  }
 
-  a = abs(a);
-  b = abs(b);
+  const sa = sign(a);
+  const sb = sign(b);
+  [a, b] = [abs(a), abs(b)];
 
   // deno-lint-ignore eqeqeq
   while (b != 0) {
@@ -264,7 +261,7 @@ export function egcd<T extends number | bigint>(
     [t0, t1] = [t1, (t0 - (q * t1)) as T];
     [a, b] = [b, r];
   }
-  return [a, sa * s0 as T, sb * t0 as T];
+  return [a, sa * s1 as T, sb * t1 as T];
 }
 
 export function gcd<T extends number | bigint>(...n: T[]): T {
