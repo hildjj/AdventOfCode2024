@@ -167,6 +167,35 @@ export function adjacentFile(
 }
 
 /**
+ * Create an array of the given length from a callback.
+ *
+ * @param length
+ * @param cb
+ * @returns
+ */
+export function toArray<T>(length: number, cb: (k: number) => T): T[] {
+  return Array.from({ length }, (_v, k) => cb(k));
+}
+
+export function div<T extends number | bigint>(x: T, y: T): T {
+  let q = (x / y) as unknown as T;
+  if (typeof x === 'bigint') {
+    const r = mod(x, y);
+    // Not only does Math.floor not work for BigInt, it's not needed because
+    // `/` does the right thing in the first place.
+
+    // except for numbers of opposite sign
+    if ((q < 0n) && (r > 0n)) {
+      // There was a remainder.  JS rounded toward zero, but python
+      // rounds down.
+      q--;
+    }
+    return q;
+  }
+  return Math.floor(q as number) as T;
+}
+
+/**
  * Modulo, minus the JS bug with negative numbers.
  * `-5 % 4` should be `3`, not `-1`.
  *

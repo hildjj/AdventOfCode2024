@@ -435,6 +435,12 @@ export class Rect<T = string> {
     return prev;
   }
 
+  fill(val: T): void {
+    for (let y = 0; y < this.height; y++) {
+      this.#vals[y].fill(val);
+    }
+  }
+
   filter(callbackFn: RectFilterCallback<T>): Point[] {
     const res: Point[] = [];
     this.forEach((v, x, y) => {
