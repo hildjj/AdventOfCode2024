@@ -83,6 +83,12 @@ function moveBigBox(
   }
 }
 
+function score(r: Rect, char: string): number {
+  return r
+    .filter((v) => v === char)
+    .reduce((t, p) => t + (p.y * 100) + p.x, 0);
+}
+
 function part1(inp: Parsed): number {
   const r = new Rect(inp[0]).copy();
   let [pos] = r.filter((v) => v === '@');
@@ -91,16 +97,12 @@ function part1(inp: Parsed): number {
       const next = pos.inDir(d);
       const target = r.get(next);
       // Runs into a wall
-      if (target === '#') {
-        // No-op
-      } else if (target === 'O') {
-        // Do box processing
-        if (moveBox(r, next, d)) {
-          r.set(pos, '.');
-          r.set(next, '@');
-          pos = next;
+      if (target !== '#') {
+        if (target === 'O') {
+          if (!moveBox(r, next, d)) {
+            continue;
+          }
         }
-      } else {
         r.set(pos, '.');
         r.set(next, '@');
         pos = next;
@@ -108,11 +110,7 @@ function part1(inp: Parsed): number {
     }
   }
 
-  let tot = 0;
-  for (const p of r.filter((v) => v === 'O')) {
-    tot += p.y * 100 + p.x;
-  }
-  return tot;
+  return score(r, 'O');
 }
 
 function part2(inp: Parsed): number {
@@ -132,28 +130,29 @@ function part2(inp: Parsed): number {
       throw new Error(`Invalid cell: ${v}`);
     })
   ));
-  let [pos] = r.filter((v) => v === '@');
+
   const moves: Move[] = [];
   const visited = new PointSet();
+  let [pos] = r.filter((v) => v === '@');
   for (const line of inp[1]) {
     for (const d of line) {
       const next = pos.inDir(d);
       const target = r.get(next);
       // Runs into a wall
-      if (target === '#') {
-        // No-op
-      } else if ((target === '[') || (target === ']')) {
-        moves.length = 0;
-        visited.clear();
-        if (moveBigBox(r, next, d, moves, visited)) {
-          for (const [p, val] of moves) {
-            r.set(p, val);
+      if (target !== '#') {
+        if ((target === '[') || (target === ']')) {
+          // Batch up moves into a 2-phase commit.
+          // Only move any of them if all moves will work.
+          moves.length = 0;
+          visited.clear();
+          if (moveBigBox(r, next, d, moves, visited)) {
+            for (const [p, val] of moves) {
+              r.set(p, val);
+            }
+          } else {
+            continue;
           }
-          r.set(pos, '.');
-          r.set(next, '@');
-          pos = next;
         }
-      } else {
         r.set(pos, '.');
         r.set(next, '@');
         pos = next;
@@ -161,11 +160,7 @@ function part2(inp: Parsed): number {
     }
   }
 
-  let tot = 0;
-  for (const p of r.filter((v) => v === '[')) {
-    tot += p.y * 100 + p.x;
-  }
-  return tot;
+  return score(r, '[');
 }
 
 export default async function main(args: MainArgs): Promise<[number, number]> {
