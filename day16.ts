@@ -95,7 +95,7 @@ function astar(inp: Parsed): AstarResults {
     end,
     minScore,
     points,
-  }
+  };
 }
 
 function part1(res: AstarResults): number {
@@ -103,7 +103,7 @@ function part1(res: AstarResults): number {
 }
 
 function part2(res: AstarResults): number {
-  const {points, end} = res;
+  const { points, end } = res;
   const seen = new PointSet();
   const reconstruct: string[] = [];
   for (const d of AllDirs) {
