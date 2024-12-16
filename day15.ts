@@ -28,10 +28,9 @@ function moveBigBox(
   moves: Move[],
   visited: PointSet,
 ): boolean {
-  if (visited.has(p)) {
+  if (!visited.first(p)) {
     return true;
   }
-  visited.add(p);
   // p is one end of bigBox.
   if ((d === Dir.E) || (d === Dir.W)) {
     const skip = p.inDir(d);
@@ -52,10 +51,9 @@ function moveBigBox(
   } else {
     const pChar = r.get(p);
     const o = (pChar === '[') ? p.inDir(Dir.E) : p.inDir(Dir.W);
-    if (visited.has(o)) {
+    if (!visited.first(o)) {
       return true;
     }
-    visited.add(o);
     const nP = p.inDir(d);
     const nO = o.inDir(d);
     const nPchar = r.get(nP);
