@@ -5,151 +5,111 @@ import { PointSet } from './lib/rect.ts';
 
 type Parsed = string[][];
 
-function part1(inp: Parsed): number {
+function toId(p: Point, d: Dir): string {
+  return `${p}-${d}`;
+}
+
+interface PointNode {
+  id: string;
+  pos: Point;
+  dir: Dir;
+  gScore: number;
+  fScore: number;
+  prev: Set<string>;
+}
+
+interface AstarResults {
+  start: Point;
+  end: Point;
+  minScore: number;
+  points: Map<string, PointNode>;
+}
+
+function astar(inp: Parsed): AstarResults {
   const r = new Rect(inp);
   const start = r.indexOf('S')!;
   const end = r.indexOf('E')!;
 
-  function toId(p: Point, d: Dir): string {
-    return `${p}-${d}`;
-  }
-
-  interface PointNode {
-    pos: Point;
-    dir: Dir;
-    gScore: number;
-    fScore: number;
-  }
-
   const sn: PointNode = {
+    id: toId(start, Dir.E),
     pos: start,
     dir: Dir.E,
     gScore: 0,
     fScore: 0,
+    prev: new Set(),
   };
-  const points = new Map<string, PointNode>([[toId(start, Dir.E), sn]]);
+  const points = new Map<string, PointNode>([[sn.id, sn]]);
   const backlog = new BinaryHeap<PointNode>(
     (a, b) => a.fScore - b.fScore,
   );
   backlog.push(sn);
 
-  function check(pos: Point, dir: Dir, newScore: number): void {
+  function check(pos: Point, dir: Dir, newScore: number, prevId: string): void {
     const id = toId(pos, dir);
-    let fn = points.get(id);
-    if (!fn) {
-      fn = {
+    let node = points.get(id);
+    if (!node) {
+      node = {
+        id: toId(pos, dir),
         pos,
         dir,
         gScore: newScore,
         fScore: newScore + pos.manhattan(end),
-      }
-      points.set(id, fn);
-      backlog.push(fn);
-    } else if (newScore < fn.gScore) {
-      fn.gScore = newScore;
-      fn.fScore = newScore + pos.manhattan(end);
-      backlog.push(fn);
+        prev: new Set([prevId]),
+      };
+      points.set(id, node);
+      backlog.push(node);
+    } else if (newScore < node.gScore) {
+      node.gScore = newScore;
+      node.fScore = newScore + pos.manhattan(end);
+      node.prev = new Set([prevId]);
+      backlog.push(node);
+    } else if (newScore === node.gScore) {
+      // Track all paths that got us to this score, for reconstruction.
+      node.prev.add(prevId);
     }
   }
 
+  let minScore = Infinity;
   while (!backlog.isEmpty()) {
     const n = backlog.pop()!;
-    const { pos, dir, gScore } = n;
+    const { id, pos, dir, gScore } = n;
 
     if (pos.equals(end)) {
-      return gScore;
+      minScore = Math.min(gScore, minScore);
+      continue;
+    }
+    if (gScore > minScore) {
+      continue;
     }
 
     const f = pos.inDir(dir);
     if (r.check(f) && r.get(f) !== '#') {
-      check(f, dir, gScore + 1);
+      check(f, dir, gScore + 1, id);
     }
-    check(pos, mod(dir - 1, 4), gScore + 1000);
-    check(pos, mod(dir + 1, 4), gScore + 1000);
+    check(pos, mod(dir - 1, 4), gScore + 1000, id);
+    check(pos, mod(dir + 1, 4), gScore + 1000, id);
   }
 
-  return NaN;
+  return {
+    start,
+    end,
+    minScore,
+    points,
+  }
 }
 
-function part2(inp: Parsed): number {
-  const r = new Rect(inp);
-  const start = r.indexOf('S')!;
-  const end = r.indexOf('E')!;
+function part1(res: AstarResults): number {
+  return res.minScore;
+}
 
-  interface Node {
-    pos: Point;
-    cost: number;
-    prev: Set<string>;
-  }
-  const points = new Map<string, Node>();
-  points.set(`${start}-${Dir.E}`, { pos: start, cost: 0, prev: new Set() });
-  for (const d of AllDirs) {
-    points.set(`${end}-${d}`, { pos: end, cost: Infinity, prev: new Set() });
-  }
-
-  interface BackNode {
-    dir: Dir;
-    pos: Point;
-  }
-  const backlog = new BinaryHeap<BackNode>(
-    (a, b) =>
-      points.get(`${a.pos}-${a.dir}`)!.cost -
-      points.get(`${b.pos}-${b.dir}`)!.cost,
-  );
-  backlog.push({
-    dir: Dir.E,
-    pos: start,
-  });
-
-  function addDir(
-    prev: Point,
-    prevDir: Dir,
-    pos: Point,
-    dir: Dir,
-    cost: number,
-    newCost: number,
-  ): void {
-    if (r.check(pos) && r.get(pos) !== '#') {
-      const id = `${pos}-${dir}`;
-      const fc = points.get(id);
-      if (!fc) {
-        points.set(id, {
-          pos,
-          cost: newCost,
-          prev: new Set([`${prev}-${prevDir}`]),
-        });
-        backlog.push({ dir, pos });
-      } else {
-        if (newCost < fc.cost) {
-          fc.cost = cost + 1;
-          fc.prev = new Set([`${prev}-${prevDir}`]);
-          backlog.push({
-            dir,
-            pos: pos,
-          });
-        } else if (newCost === fc.cost) {
-          fc.prev.add(`${prev}-${prevDir}`);
-          backlog.push({ dir, pos });
-        }
-      }
-    }
-  }
-
-  while (!backlog.isEmpty()) {
-    const n = backlog.pop()!;
-    const { pos, dir } = n;
-    const { cost } = points.get(`${pos}-${dir}`)!;
-
-    addDir(pos, dir, pos.inDir(dir), dir, cost, cost + 1);
-    addDir(pos, dir, pos, mod(dir - 1, 4), cost, cost + 1000);
-    addDir(pos, dir, pos, mod(dir + 1, 4), cost, cost + 1000);
-  }
-
+function part2(res: AstarResults): number {
+  const {points, end} = res;
   const seen = new PointSet();
   const reconstruct: string[] = [];
   for (const d of AllDirs) {
-    if (isFinite(points.get(`${end}-${d}`)!.cost)) {
-      reconstruct.push(`${end}-${d}`);
+    const id = toId(end, d);
+    if (isFinite(points.get(id)?.gScore ?? Infinity)) {
+      reconstruct.push(id);
     }
   }
   while (reconstruct.length) {
@@ -163,5 +123,6 @@ function part2(inp: Parsed): number {
 
 export default async function main(args: MainArgs): Promise<[number, number]> {
   const inp = await parseFile<Parsed>(args);
-  return [part1(inp), part2(inp)];
+  const res = astar(inp);
+  return [part1(res), part2(res)];
 }
