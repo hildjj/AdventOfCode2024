@@ -1,4 +1,3 @@
-import { assert } from '@std/assert/assert';
 import { AllDirs, Dir, Point, Rect } from './lib/rect.ts';
 import { type MainArgs, mod, parseFile } from './lib/utils.ts';
 import { BinaryHeap } from '@std/data-structures';
@@ -6,74 +5,67 @@ import { PointSet } from './lib/rect.ts';
 
 type Parsed = string[][];
 
-// Janky Djykstra without looking up the algorithm.  Clean this up later
-// and try astar, since we've got a good heuristic (manhattan distance to E).
 function part1(inp: Parsed): number {
   const r = new Rect(inp);
-  const start = r.indexOf('S');
-  assert(start);
-  const end = r.indexOf('E');
-  assert(end);
+  const start = r.indexOf('S')!;
+  const end = r.indexOf('E')!;
 
-  interface PointNode {
-    id: string;
-    pos: Point;
-    dir: Dir;
-    cost: number;
+  function toId(p: Point, d: Dir): string {
+    return `${p}-${d}`;
   }
 
-  const backlog = new BinaryHeap<PointNode>(
-    (a, b) => a.cost - b.cost,
-  );
-  backlog.push({
-    id: `${start}-${Dir.E}`,
+  interface PointNode {
+    pos: Point;
+    dir: Dir;
+    gScore: number;
+    fScore: number;
+  }
+
+  const sn: PointNode = {
     pos: start,
     dir: Dir.E,
-    cost: 0,
-  });
-  const seen = new Set<string>();
+    gScore: 0,
+    fScore: 0,
+  };
+  const points = new Map<string, PointNode>([[toId(start, Dir.E), sn]]);
+  const backlog = new BinaryHeap<PointNode>(
+    (a, b) => a.fScore - b.fScore,
+  );
+  backlog.push(sn);
+
+  function check(pos: Point, dir: Dir, newScore: number): void {
+    const id = toId(pos, dir);
+    let fn = points.get(id);
+    if (!fn) {
+      fn = {
+        pos,
+        dir,
+        gScore: newScore,
+        fScore: newScore + pos.manhattan(end),
+      }
+      points.set(id, fn);
+      backlog.push(fn);
+    } else if (newScore < fn.gScore) {
+      fn.gScore = newScore;
+      fn.fScore = newScore + pos.manhattan(end);
+      backlog.push(fn);
+    }
+  }
 
   while (!backlog.isEmpty()) {
-    const n = backlog.pop();
-    assert(n);
-    const { id, pos, dir, cost } = n;
-    if (seen.has(id)) {
-      continue;
-    }
-    seen.add(id);
+    const n = backlog.pop()!;
+    const { pos, dir, gScore } = n;
+
     if (pos.equals(end)) {
-      return cost;
+      return gScore;
     }
 
     const f = pos.inDir(dir);
     if (r.check(f) && r.get(f) !== '#') {
-      backlog.push({
-        id: `${f}-${dir}`,
-        pos: f,
-        dir,
-        cost: cost + 1,
-      });
+      check(f, dir, gScore + 1);
     }
-    const leftDir = mod(dir - 1, 4);
-    const left = pos.inDir(leftDir);
-    if (r.check(left) && r.get(left) !== '#') {
-      backlog.push({
-        id: `${left}-${leftDir}`,
-        pos: left,
-        dir: leftDir,
-        cost: cost + 1001,
-      });
-    }
-    const rightDir = mod(dir + 1, 4);
-    const right = pos.inDir(rightDir);
-    if (r.check(right) && r.get(right) !== '#') {
-      backlog.push({
-        id: `${right}-${rightDir}`,
-        pos: right,
-        dir: rightDir,
-        cost: cost + 1001,
-      });
-    }
+    check(pos, mod(dir - 1, 4), gScore + 1000);
+    check(pos, mod(dir + 1, 4), gScore + 1000);
   }
 
   return NaN;
