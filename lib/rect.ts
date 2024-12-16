@@ -703,6 +703,21 @@ export class PointSet {
   }
 
   /**
+   * Is this sthe first time this point has been seen?
+   * Adds the point if so.
+   *
+   * @param value
+   */
+  first(value: Point): boolean {
+    const n = value.toNumber();
+    if (this.#set.has(n)) {
+      return false;
+    }
+    this.#set.add(n);
+    return true;
+  }
+
+  /**
    * @returns the number of (unique) elements in Set.
    */
   get size(): number {
@@ -808,6 +823,13 @@ export class PointSet {
     return this.#set.isDisjointFrom(other.#set);
   }
 
+  withAdded(value: Point): PointSet {
+    const n = new PointSet();
+    n.#set = new Set(this.#set);
+    n.add(value);
+    return n;
+  }
+
   [Symbol.for('Deno.customInspect')](): string {
     let ret = `PointSet(${this.size}) { `;
     let first = true;
@@ -824,5 +846,86 @@ export class PointSet {
     }
     ret += '}';
     return ret;
+  }
+}
+
+export class PointMap<T> implements Map<Point, T> {
+  #map = new Map<number, T>();
+
+  constructor(iterable?: Iterable<readonly [Point, T]> | null) {
+    if (iterable) {
+      for (const [p, v] of iterable) {
+        this.#map.set(p.toNumber(), v);
+      }
+    }
+  }
+
+  set(p: Point, v: T): this {
+    this.#map.set(p.toNumber(), v);
+    return this;
+  }
+
+  get(p: Point): T | undefined {
+    return this.#map.get(p.toNumber());
+  }
+
+  clear(): void {
+    this.#map.clear();
+  }
+
+  forEach(
+    callbackfn: (value: T, key: Point, map: Map<Point, T>) => void,
+    thisArg?: unknown,
+  ): void {
+    // deno-lint-ignore no-this-alias
+    const m = this;
+    this.#map.forEach(
+      function (v, p): void {
+        callbackfn(v, Point.fromNumber(p), m as unknown as Map<Point, T>);
+      },
+      thisArg,
+    );
+  }
+
+  /**
+   * @returns true if an element in the Map existed and has been removed, or
+   * false if the element does not exist.
+   */
+  delete(key: Point): boolean {
+    return this.#map.delete(key.toNumber());
+  }
+
+  has(key: Point): boolean {
+    return this.#map.has(key.toNumber());
+  }
+
+  get size(): number {
+    return this.#map.size;
+  }
+
+  *keys(): MapIterator<Point> {
+    for (const k of this.#map.keys()) {
+      yield Point.fromNumber(k);
+    }
+  }
+
+  *entries(): MapIterator<[Point, T]> {
+    for (const [k, v] of this.#map.entries()) {
+      yield [Point.fromNumber(k), v];
+    }
+  }
+
+  values(): MapIterator<T> {
+    return this.#map.values();
+  }
+
+  *[Symbol.iterator](): MapIterator<[Point, T]> {
+    for (const [k, v] of this.#map) {
+      yield [Point.fromNumber(k), v];
+    }
+  }
+
+  get [Symbol.toStringTag](): string {
+    return 'PointSet';
   }
 }
