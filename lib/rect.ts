@@ -929,3 +929,62 @@ export class PointMap<T> implements Map<Point, T> {
     return 'PointSet';
   }
 }
+
+export interface ForestPoint {
+  parent: ForestPoint; // TODO(@hildjj): Redo with parent?: ForestPoint
+  size: number;
+  data: number;
+}
+
+export class PointForest {
+  #all = new PointMap<ForestPoint>();
+
+  #newForestPoint(data: number): ForestPoint {
+    const fp = {
+      parent: undefined as (ForestPoint | undefined),
+      size: 1,
+      data,
+    };
+    fp.parent = fp as ForestPoint;
+    return fp as ForestPoint;
+  }
+
+  add(p: Point, data: number): void {
+    let fp = this.#all.get(p);
+    if (!fp) {
+      fp = this.#newForestPoint(data);
+      this.#all.set(p, fp);
+    } else {
+      throw new Error(`Dup! ${p}`);
+    }
+  }
+
+  #find(p: Point): ForestPoint | undefined {
+    let fp = this.#all.get(p);
+    if (!fp) {
+      return undefined;
+    }
+    while (fp.parent !== fp) {
+      // Reset parents as we traverse up.
+      // This is why x.parent = x at the top, so that grandparent always works.
+      [fp, fp.parent] = [fp.parent, fp.parent.parent];
+      fp = fp.parent;
+    }
+    return fp;
+  }
+
+  union(a: Point, b: Point): number | undefined {
+    let afp = this.#find(a);
+    let bfp = this.#find(b);
+    if (!afp || !bfp || (afp === bfp)) {
+      return undefined; // Already in the same set, or one of the points isn't in the set.
+    }
+    if (afp.size < bfp.size) {
+      [afp, bfp] = [bfp, afp];
+    }
+    bfp.parent = afp;
+    afp.size += bfp.size;
+    afp.data |= bfp.data;
+    return afp.data;
+  }
+}
