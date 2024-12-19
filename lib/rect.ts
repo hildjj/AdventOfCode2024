@@ -939,21 +939,16 @@ export interface ForestPoint {
 export class PointForest {
   #all = new PointMap<ForestPoint>();
 
-  #newForestPoint(data: number): ForestPoint {
-    const fp = {
-      parent: undefined as (ForestPoint | undefined),
-      size: 1,
-      data,
-    };
-    fp.parent = fp as ForestPoint;
-    return fp as ForestPoint;
-  }
-
   add(p: Point, data: number): void {
-    let fp = this.#all.get(p);
+    const fp = this.#all.get(p);
     if (!fp) {
-      fp = this.#newForestPoint(data);
-      this.#all.set(p, fp);
+      const f = {
+        parent: undefined as (ForestPoint | undefined),
+        size: 1,
+        data,
+      };
+      f.parent = f as ForestPoint;
+      this.#all.set(p, f as ForestPoint);
     } else {
       throw new Error(`Dup! ${p}`);
     }
