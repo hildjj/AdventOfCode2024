@@ -4,12 +4,10 @@ type Parsed = [towels: string[], designs: string[]];
 
 // Global cache across both parts, makes part2 O(1).
 const seen = new Map<string, number>();
+seen.set('', 1); // The end of the string
 
 // Memoized, count the number of ways a string can be partitioned
 function find(d: string, towels: string[]): number {
-  if (d === '') {
-    return 1;
-  }
   const s = seen.get(d);
   if (s !== undefined) {
     return s;
