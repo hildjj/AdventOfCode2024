@@ -1,4 +1,3 @@
-import { Counter } from './lib/counter.ts';
 import { AllDirs, Point, PointMap, Rect } from './lib/rect.ts';
 import { type MainArgs, parseFile } from './lib/utils.ts';
 import { BinaryHeap } from '@std/data-structures';
