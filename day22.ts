@@ -4,6 +4,7 @@ import { Ring } from './lib/ring.ts';
 
 type Parsed = bigint[];
 
+// Has to be bigints, since we go over 2^32.
 const PRUNE = 16777216n;
 function nextSecret(n: bigint): bigint {
   n = ((n * 64n) ^ n) % PRUNE;
@@ -26,12 +27,12 @@ function part1(inp: Parsed): bigint {
 function part2(inp: Parsed): number {
   const patterns = new Counter();
   for (let n of inp) {
-    const c = new Ring(4);
+    const c = new Ring<bigint>(4);
     const seen = new Set<string>();
+    let cost = n % 10n;
 
     for (let i = 0; i < 2000; i++) {
       const nextN = nextSecret(n);
-      const cost = n % 10n;
       const nextCost = nextN % 10n;
       c.push(nextCost - cost);
 
@@ -42,7 +43,7 @@ function part2(inp: Parsed): number {
           seen.add(key);
         }
       }
-      n = nextN;
+      [n, cost] = [nextN, nextCost];
     }
   }
 
