@@ -3,7 +3,7 @@ import { assertEquals } from '@std/assert';
 
 Deno.test('Counter', () => {
   const c = new Counter<number>();
-  assertEquals(c.max(), null);
+  assertEquals(c.max(), undefined);
   assertEquals(c.size, 0);
 
   c.add(1, 2); // 1
