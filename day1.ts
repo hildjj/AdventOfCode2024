@@ -1,5 +1,5 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
-import { Counter } from './lib/counter.ts';
+import { NumberCounter } from './lib/counter.ts';
 import { Sequence } from './lib/sequence.ts';
 
 function part1(left: number[], right: number[]): number {
@@ -11,7 +11,7 @@ function part1(left: number[], right: number[]): number {
 }
 
 function part2(left: number[], right: number[]): number {
-  const count = new Counter<number>();
+  const count = new NumberCounter();
   count.addAll(right);
   return left.reduce((t, v) => t + (v * count.get(v)), 0);
 }

@@ -1,6 +1,5 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
-import { Counter } from './lib/counter.ts';
-import { Ring } from './lib/ring.ts';
+import { NumberCounter } from './lib/counter.ts';
 
 type Parsed = bigint[];
 
@@ -25,25 +24,25 @@ function part1(inp: Parsed): bigint {
 }
 
 function part2(inp: Parsed): number {
-  const patterns = new Counter();
+  const patterns = new NumberCounter();
   for (let n of inp) {
-    const c = new Ring<bigint>(4);
-    const seen = new Set<string>();
-    let cost = n % 10n;
+    let last4 = 0;
+    const seen = new Set<number>();
+    let cost = Number(n % 10n);
 
     for (let i = 0; i < 2000; i++) {
       const nextN = nextSecret(n);
-      const nextCost = nextN % 10n;
-      c.push(nextCost - cost);
+      const nextCost = Number(nextN % 10n);
+      // Input is -9..9.  Normalize to 0..18, which takes 5 bits.
+      // Put the newest one at the top chunk, moving all of the others towards 0.
+      last4 = ((nextCost - cost + 9) << 15) | (last4 >> 5);
 
-      if (c.full) {
-        const key = c.get().join(',');
-        if (!seen.has(key)) {
-          patterns.sum(Number(nextCost), key);
-          seen.add(key);
-        }
+      if ((i > 2) && !seen.has(last4)) {
+        patterns.sum(nextCost, last4);
+        seen.add(last4);
       }
-      [n, cost] = [nextN, nextCost];
+      n = nextN;
+      cost = nextCost;
     }
   }
 

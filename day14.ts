@@ -1,6 +1,6 @@
 import { Point } from './lib/rect.ts';
 import { div, type MainArgs, mod, parseFile } from './lib/utils.ts';
-import { Counter } from './lib/counter.ts';
+import { NumberCounter } from './lib/counter.ts';
 
 type Parsed = [px: number, py: number, vx: number, vy: number][];
 
@@ -53,8 +53,8 @@ function part2(inp: Parsed): number {
   // I found the setpoints by writing images to the terminal and fiddling with
   // the constants.  Used Jimp and term-img.
   for (let i = 0; i < Infinity; i++) {
-    const xc = new Counter<number>();
-    const yc = new Counter<number>();
+    const xc = new NumberCounter();
+    const yc = new NumberCounter();
     for (let j = 0; j < pos.length; j++) {
       const p = pos[j];
       const [_px, _py, vx, vy] = inp[j];
