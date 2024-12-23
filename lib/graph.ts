@@ -72,6 +72,13 @@ export class Link<LinkData, NodeId extends string | number = string> {
     this.id = id ?? Link.makeId(fromId, toId);
   }
 
+  otherId(id: NodeId): NodeId {
+    if (this.fromId === id) {
+      return this.toId;
+    }
+    return this.fromId;
+  }
+
   static makeId<NodeId extends string | number = string>(
     fromId: NodeId,
     toId: NodeId,
