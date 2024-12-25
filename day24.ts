@@ -1,4 +1,5 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
+import { assert, assertGreater } from '@std/assert';
 
 type Op = [left: string, op: string, right: string, output: string];
 type Parsed = [inputs: [reg: string, val: boolean][], ops: Op[]];
@@ -33,7 +34,7 @@ function toNum(state: Map<string, boolean>, prefix: string): bigint {
   return tot;
 }
 
-function _fromNum(
+function fromNum(
   state: Map<string, boolean>,
   prefix: string,
   val: bigint,
@@ -45,7 +46,7 @@ function _fromNum(
 }
 
 function runOps(state: Map<string, boolean>, ops: Op[]): bigint {
-  state = new Map(state);
+  // state = new Map(state);
   while (ops.length) {
     const next: [left: string, op: string, right: string, output: string][] =
       [];
@@ -72,9 +73,62 @@ function part1(inp: Parsed): bigint {
   return runOps(state, ops);
 }
 
-function part2(_inp: Parsed): string {
-  // const [inputs, ops] = inp;
-  // const state = new Map<string, boolean>();
+function findOp(ops: Op[], a: string, b: string, op?: string): number {
+  return ops.findIndex(([left, o, right]) =>
+    (a === left) && (b === right) && (!op || (op === o))
+  );
+}
+
+function cpOp(
+  x: string,
+  op: string,
+  y: string,
+  ops: Op[],
+  goodOps: Op[],
+): string {
+  let i = findOp(ops, x, y, op);
+  if (i === -1) {
+    i = findOp(ops, y, x, op);
+  }
+  assertGreater(i, -1, `Not found: ${x} ${op} ${y}`);
+  goodOps.push(ops[i]);
+  return ops[i][3];
+}
+
+function mvOps(
+  x: string,
+  y: string,
+  ops: Op[],
+  goodOps: Op[],
+  carry: string[],
+): void {
+  const and = cpOp(x, 'AND', y, ops, goodOps);
+  assert(!and.startsWith('z'), `Bad AND: ${and}`);
+  const xor = cpOp(x, 'XOR', y, ops, goodOps);
+  assert(!xor.startsWith('z'), `Bad XOR: ${and}`);
+  const carryIn = carry[carry.length - 1];
+  const cor = cpOp(xor, 'AND', carryIn, ops, goodOps);
+  assert(!cor.startsWith('z'), `Bad COR: ${and}`);
+  carry.push(cpOp(cor, 'OR', and, ops, goodOps));
+  const z = cpOp(carryIn, 'XOR', xor, ops, goodOps);
+  assert(z.startsWith('z'), `Bad Z: ${z}`);
+}
+
+function switchOuts(
+  a: string,
+  b: string,
+  ops: Op[],
+  outs: { [key: string]: number },
+  switches: string[],
+): void {
+  ops[outs[a]][3] = b;
+  ops[outs[b]][3] = a;
+  switches.push(a, b);
+}
+
+function part2(inp: Parsed): string {
+  const [_inputs, ops] = inp;
+  const state = new Map<string, boolean>();
   // for (const [reg, val] of inputs) {
   //   state.set(reg, val);
   // }
@@ -99,6 +153,13 @@ function part2(_inp: Parsed): string {
   // C0 = 0, so first is half-adder
   // y00 XOR x00 -> z00 (S0)
   // x00 AND y00 -> nqp (C1)
+
+  const carry = ['0', 'nqp'];
+  const goodOps: Op[] = [
+    ['y00', 'XOR', 'x00', 'z00'], // (S0)
+    ['x00', 'AND', 'y00', 'nqp'], // (C1)
+  ];
+
   //
   // 1) y01 AND x01 -> dmk (x1ay1)
   // 2) x01 XOR y01 -> fht (x1Xy1)
@@ -169,43 +230,57 @@ function part2(_inp: Parsed): string {
   // mrj OR cbd -> bjr (C26)
   // rqf XOR kdt -> z25
 
-  // ops.sort((a, b) => a[0].localeCompare(b[0]))
-  // const int = new Set(['z25']);
-  // for (const [left, op, right, output] of ops) {
-  //   if (int.has(left) || int.has(right) || int.has(output)) {
-  //     console.log(left, op, right, '->', output)
-  //   }
-  // }
+  const outs = Object.create(null);
+  ops.forEach(([_left, _op, _right, output], i) => {
+    outs[output] = i;
+  });
 
-  // const outs = Object.create(null);
-  // ops.forEach(([_left, _op, _right, output], i) => {
-  //   outs[output] = i;
-  // });
+  const swaps: string[] = [];
+  switchOuts('z06', 'jmq', ops, outs, swaps);
+  switchOuts('gmh', 'z13', ops, outs, swaps);
+  switchOuts('qrh', 'z38', ops, outs, swaps);
+  switchOuts('rqf', 'cbd', ops, outs, swaps);
 
-  // ops[outs.z06][3] = 'jmq';
-  // ops[outs.jmq][3] = 'z06';
-  // ops[outs.z13][3] = 'gmh';
-  // ops[outs.gmh][3] = 'z13';
-  // ops[outs.z38][3] = 'qrh';
-  // ops[outs.qrh][3] = 'z38';
+  let num = 0n;
+  for (let i = 0n; i < 44; i++) {
+    num = (num << 1n) | 1n;
+    const s = new Map(state);
+    fromNum(s, 'x', num);
+    fromNum(s, 'y', num);
 
-  // ops[outs.cbd][3] = 'rqf';
-  // ops[outs.rqf][3] = 'cbd';
+    // Tack on the carry bit
+    const z = runOps(s, goodOps) |
+      (s.get(carry[carry.length - 1]) ? 1n : 0n) << (i + 1n);
 
-  // let num = 0n;
-  // for (let i = 0; i < 45; i++) {
-  //   num = (num << 1n) | 1n;
-  //   const s = new Map(state);
-  //   fromNum(s, 'x', num);
-  //   fromNum(s, 'y', num);
-  //   const z = runOps(s, ops);
-  //   if (z !== num + num) {
-  //     console.log(i);
-  //     break;
-  //   }
-  // }
+    let wrong = false;
+    if (z !== num + num) {
+      console.log(goodOps);
+      console.log({ i, num, z }, s.get(carry[1]));
+      wrong = true;
+    } else {
+      try {
+        mvOps(`x${p2(i + 1n)}`, `y${p2(i + 1n)}`, ops, goodOps, carry);
+      } catch (e) {
+        console.log('MV', (e as Error).message);
+        console.log(
+          Deno.inspect(goodOps, {
+            depth: Infinity,
+            colors: true,
+            iterableLimit: Infinity,
+          }),
+          carry,
+        );
+        console.log('mv', { i, num, z }, s.get(carry[1]));
+        wrong = true;
+      }
+    }
+    if (wrong) {
+      // TODO(@hildjj): back up to last goodOps and try combinations(2)
+      // to swap.  Left as exercise.
+      break;
+    }
+  }
 
-  const swaps = ['jmq', 'z06', 'gmh', 'z13', 'qrh', 'z38', 'rqf', 'cbd'];
   return swaps.sort().join(',');
 }
 
